@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import json
+import simplejson as json
 import web
 
 from app.DnsLookup import DnsLookup

@@ -13,10 +13,10 @@ app = web.application(urls, globals())
 
 class MainHandler:        
 	def GET(self, action):
-		if action == 'dns':
-			dns = DnsLookup()
-			dic =  {'servers': dns.lookup_all()}
-			return json.dumps(dic)
+		#if action == 'dns':
+		#	dns = DnsLookup()
+		#	dic =  {'servers': dns.lookup_all()}
+		#	return json.dumps(dic)
 
 		if not action: 
 			action = 'World'

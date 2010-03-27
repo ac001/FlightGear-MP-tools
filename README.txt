@@ -13,5 +13,3 @@ pushing to the master machine
 * Automatically search for new MpServers via DNS
 * create a service wherby mpserves can update, eg a wget on a cron
 
-
-

@@ -11,6 +11,7 @@ urls = (
 )
 app = web.application(urls, globals())
 
+
 class MainHandler:        
 	def GET(self, action):
 		#if action == 'dns':

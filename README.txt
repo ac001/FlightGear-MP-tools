@@ -13,3 +13,25 @@ pushing to the master machine
 * Automatically search for new MpServers via DNS
 * create a service wherby mpserves can update, eg a wget on a cron
 
+
+
+## Install ##
+On debian with python 2.5 installed (may vary)
+
+-------------------------
+# require "easy_install" which is in "setuptools" to install web.py
+apt-get install python-setuptools
+
+# install web.py
+easy_install web.py
+
+# install the python wsgi gateway (cgi), which in in "flup"
+apt-get install python-flup 
+
+
+-------------------------
+# need "json"
+#on python25
+apt-get install python-simplejson
+apt-get install python-cjson
+

@@ -13,7 +13,6 @@ app = web.application(urls, globals())
 
 class MainHandler:        
 	def GET(self, action):
-		print "action=", action
 		if action == 'dns':
 			dns = DnsLookup()
 			dic =  {'servers': dns.lookup_all()}

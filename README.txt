@@ -35,3 +35,54 @@ apt-get install python-flup
 apt-get install python-simplejson
 apt-get install python-cjson
 
+
+
+
+
+
+#####################
+
+Experimantal Idea:
+Currently the MP serverstatus, DNS entries and mapservers are seperate.
+
+Idea is to consolidate all of this into a "service" (maybe even websockets)
+visible at http://fg-online.flightgear.org (Google App Engine)
+
+Google App Engien only talks port 80,
+So instead, set up a server to both be a service and push to GAE
+
+## psuedo code	
+
+class MainMonitor:
+	def init()
+		pilots_list = {}
+
+		## first get the list of servers from dns
+		server_list = None
+		if serverList == None:
+			self.fetch_server()
+
+		for server in server_list:
+			start_telent_thread(server, every=2 seconds, callback=update_pilots)
+
+	def update_pilots(pilots):
+		for pilot in pilots:
+			update_pilot(pilot)
+		write_to_file_js_xml()
+
+	def update_pilot():
+		# calc airspeed and trend
+		# update the pilots_list ? multipthreaded
+
+	def fetch_servers()
+		#go and get list
+		server_list = DoDnsThread()
+
+
+		
+
+## run it
+MainMonitor()	
+
+
+

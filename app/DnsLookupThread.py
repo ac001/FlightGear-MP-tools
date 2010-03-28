@@ -1,16 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys
-import time
-import threading
-import signal
 import socket
+import simplejson as json
+import urllib
+import urllib2
+import threading
 
-import mp_config
-
-DNS_INTERVAL = 5
-MAX_NAME_SERVER = 20
+import config
 
 class DnsLookupThread(threading.Thread):
 
@@ -27,7 +24,7 @@ class DnsLookupThread(threading.Thread):
 		"""Looks up all servers in range 1 to MAX_NAME_SERVER"""
 		print "\tLookup All"
 		results = {}
-		for server_no in range(1, MAX_NAME_SERVER + 1):
+		for server_no in range(1, config.MAX_NAME_SERVER + 1):
 			ok, domain, details = self.lookup(server_no)
 			if ok:
 				results[domain] = details
@@ -43,34 +40,26 @@ class DnsLookupThread(threading.Thread):
 		except socket.gaierror, e:
 			return False, e, None
 
+	def update_master(self):
+		print "\tUpdate DNS to Master"
+		## dump servers into a json string
+		request_vars = {}
+		request_vars['servers'] =  json.dumps(self.lookup_all())
+		request_vars['max_server'] = config.MAX_NAME_SERVER
+		payload = urllib.urlencode( request_vars )
 
+		## send update
+		request = urllib2.Request(config.UPDATE_DNS, payload)
+		try:
+			response = urllib2.urlopen(request)
 
-class Main:
+		except urllib2.URLError, e: 
+			if hasattr(e, 'reason'):
+				print "   URL =", e.reason, config.UPDATE_DNS
+				return False
+			elif hasattr(e, 'code'):
+				print "   HTTP =", e.code, config.UPDATE_DNS
+				#print BaseHTTPServer.BaseHTTPRequestHandler.responses
 
-	def __init__(self):
-		self._mp_servers = {}
-
-		self.dnsThread = DnsLookupThread()
-		self.dnsThread.start()
-		
-		while True:
-			tim = time.time()
-			print tim
-			if int(tim) % DNS_INTERVAL == 0:
-				if self.dnsThread.is_alive():
-					print "running"
-				else:
-					
-		
-			time.sleep(1)
-
-if __name__ == "__main__":
-
-	def signal_handler(signal, frame):
-		print 'Process killed'
-		sys.exit(0)
-
-	signal.signal(signal.SIGINT, signal_handler)
-	print 'Press Ctrl-C to stop'
-
-	Main()
+		else:
+			print response.read()

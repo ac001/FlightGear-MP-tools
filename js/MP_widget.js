@@ -319,10 +319,12 @@ this.create_socket = function (){
 						self.markers[r.callsign].setPosition(latlng); // = new google.maps.Marker({
 
 
-						var path = self.polyLines[r.callsign].getPath();
 						
-						if(self.polyCoordinates[r.callsign].length == 10){
-							path.removeAt(9);
+						
+			
+						var path = self.polyLines[r.callsign].getPath();
+						if(path.getLength() == 50){
+							path.pop() //(9);
 						}
 						path.insertAt(0, latlng);
 						//paths.insertAt(0, latlng);
@@ -360,7 +362,7 @@ this.create_socket = function (){
 			self.pilotsStore.add(pRec);
 			var latlng = new google.maps.LatLng(pilots[p].lat, pilots[p].lng);
 			//self.markers[pilots[p].callsign] = new Array();
-			self.polyCoordinates[pilots[p].callsign] = [] //new google.maps.MVCArray(latlng);
+			self.polyCoordinates[pilots[p].callsign] = new google.maps.MVCArray();
 			var polyOptions = {
 				path: self.polyCoordinates[pilots[p].callsign],
 				strokeColor: 'red',

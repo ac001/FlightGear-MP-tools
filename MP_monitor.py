@@ -143,6 +143,7 @@ class MP_MonitorBot(QtCore.QObject):
 
 	def on_socket_delete_later(self, remote_address):
 		##print "delete later", remote_address
+		self.clientSockets[remote_address].disconnectFromHost()
 		del self.clientSockets[remote_address]
 		print "Dropped >>", (", ").join(self.clientSockets.keys())
 

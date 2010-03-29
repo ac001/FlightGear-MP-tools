@@ -202,13 +202,16 @@ class MP_MonitorBot(QtCore.QObject):
 			else:
 				parts =  line.split(" ")
 				#print parts
-				#sc3@LOCAL: -4854301.177206 4143809.601100 94760.548555 0.856340 139.514712 
-				#  0            1              2            3            4       5
-				##16404.199475 1.825307 -0.713956 1.824345 Aircraft/c172p/Models/c172p.xml
-				# 6             7          8         9        10
+				#sc3@LOCAL: -4854301.177206 4143809.601100 94760.548555 
+				#  0            1              2            3          
+				# 0.856340 139.514712 16404.199475
+				#   4       5          6
+				## xx,  -0.713956 1.824345 Aircraft/c172p/Models/c172p.xml
+				#  7          8         9         10
 				#return
 				## ta xiii
-				#Origin, LastPos[X], LastPos[Y], LastPos[Z], PlayerPosGeod[Lat], PlayerPosGeod[Lon], PlayerPosGeod[Alt],
+				#Origin, LastPos[X], LastPos[Y], LastPos[Z], 
+				# PlayerPosGeod[Lat], PlayerPosGeod[Lon], PlayerPosGeod[Alt],
 				#LastOrientation[X], LastOrientation[Y], LastOrientation[Z], ModelName
 				callsign = parts[0].split("@")[0].strip()
 				if callsign != '':
@@ -227,7 +230,8 @@ class MP_MonitorBot(QtCore.QObject):
 						pass
 				#return
 				# self.emit(QtCore.SIGNAL("pilot"), pilot)
-		print len(pilots)
+		#print len(pilots)
+
 		#print "\t>>", "p=", len(pilots),  "ms=", self.telnetTimer[host_address].msecsTo( QtCore.QTime.currentTime() ), "\thost=", host_address
 		json_str = json.dumps({'pilots': pilots})
 		ba = QtCore.QByteArray('\x00' + json_str + '\xff')
@@ -235,7 +239,9 @@ class MP_MonitorBot(QtCore.QObject):
 			for idx in self.clientSockets:
 				self.clientSockets[idx].write(ba)
 			#print "send", (", ").join(self.clientSockets.keys())
-		
+			if self.increment % 10 == 0:
+				print "online=", len(pilots)
+		self.increment += 1
 
 	#######################################################
 	## Events

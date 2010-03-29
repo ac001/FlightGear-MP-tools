@@ -1,0 +1,364 @@
+
+/*============================================*/
+/* Icons */
+/*============================================*/
+.iconMap {background-image: url('../images/icons/map.png') !important;}
+.iconNav {background-image: url('../images/icons/transmit.png') !important;}
+
+.iconPilots {background-image: url('../images/icons/group.png') !important;}
+.iconPilot {background-image: url('../images/icons/user_suit.png') !important;}
+
+.iconRefresh {background-image: url('../images/icons/arrow_refresh.png') !important;}
+
+.iconServerStatus {background-image: url('../images/icons/cog.png') !important;}
+
+.iconVor {background-image: url('../../images/nav_icons/vor.png') !important;}
+.iconNdb {background-image: url('../../images/nav_icons/ndb.png') !important;}
+
+
+/*============================================*/
+/* Pilots call sign in grid */
+/*============================================*/
+.fg_pilot_dead{
+	border-left: 5px solid red;
+	
+}
+.fg_pilot_new{
+	border-left: 5px solid orange;
+}
+.fg_pilot_fly{
+	border-left: 5px solid green;
+}
+
+/*============================================*/
+/* Globals */
+/*============================================*/
+body{
+}
+
+#flightgear_logo{
+	position: fixed;
+	top: 10px;
+	left: 5px;
+}
+	
+#container
+{
+width: 90%;
+margin: 10px auto;
+min-height: 600px;
+color: #333;
+border: 0px solid gray;
+line-height: 130%;
+}
+
+.info{
+	background-color: yellow;
+	border: 1px solid blue;
+	padding: 10px;
+	font-family: sans-serif;
+}
+
+/*============================================*/
+/* Top Box */
+/*============================================*/
+#top_box
+{
+padding: .5em;
+/* background-color: #ddd;
+border-bottom: 1px solid gray; */
+}
+
+#top_box h1
+{
+padding: 0px;
+margin: 0px;
+text-align: right;
+color: #3B6695;
+
+}
+
+#top_box table.toolbar
+{
+margin: 0px;
+text-align: right;
+
+font-size: 9pt;
+}
+
+#top_box table.toolbar
+{
+font-family: arial, sans-serif;
+}
+#top_box table.toolbar th
+{
+padding: 4px 4px 4px 20px;
+border-bottom: 1px solid #eeeeee;
+}
+
+#top_box table.toolbar td
+{
+padding: 4px;
+border-bottom: 1px solid #eeeeee;
+}
+
+/*============================================*/
+/* Leeft Box (unused) */
+/*============================================*/
+#left_box
+{
+float: left;
+width: 250px;
+margin: 0px;
+padding: 1em;
+
+}
+
+#left_box h2{
+ font-size: 10pt;
+}
+
+#left_box h4{
+font-size: 8pt;
+}
+
+.video_box{
+	padding: 2px;
+	margin-bottom: 5px;
+	text-align: center;
+}
+
+
+/*============================================*/
+/* Right Box */
+/*============================================*/
+#right_box
+{
+float: right;
+width: 200px;
+margin: 0px;
+padding: 1em;
+background-color: #efefef;
+border: 1px solid #dddddd;
+font-family: arial, sans-serif;
+
+}
+
+#right_box h2{
+ font-size: 10pt;
+ border-bottom: 1px solid #dddddd;
+
+}
+
+#right_box p{
+ font-size: 9pt;
+ padding: 10px;
+
+}
+
+
+
+#footer
+{
+clear: both;
+margin: 0;
+padding: .5em;
+color: #333;
+background-color: #ddd;
+border-top: 1px solid gray;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/****************************************************/
+/** Main Tabs Navigation Tabs **/
+/****************************************************/
+.navtabs
+{
+padding: 3px 0px;
+margin-left: 0px;
+border-bottom: 1px solid #aaaaaa;
+font: bold 12px Verdana, sans-serif;
+}
+
+.navtabs li
+{
+list-style: none;
+margin: 0px;
+display: inline;
+}
+
+.navtabs li a
+{
+padding: 3px 0.5em;
+margin-left: 3px;
+border: 1px solid #aaaaaa;
+border-bottom: none;
+background: #eeeeee;
+text-decoration: none;
+color: black;
+}
+
+.navtabs li a:hover
+{
+color: #000;
+background: #AAE;
+border-color: #227;
+}
+
+.navtabs li a.current
+{
+background: white;
+border-bottom: 1px solid white;
+}
+
+
+/****************************************************/
+/** SUB Navigation Tabs **/
+/****************************************************/
+.navsubtabs
+{
+padding: 3px 0px;
+margin-left: 0px;
+border-bottom: 1px solid #aaaaaa;
+font: normal 10pt  sans-serif;
+}
+
+.navsubtabs li
+{
+list-style: none;
+margin: 0px;
+display: inline;
+}
+
+.navsubtabs li a
+{
+padding: 3px 0.5em;
+margin-left: 3px;
+border: 1px solid #aaaaaa;
+border-bottom: none;
+background: #eeeeee;
+text-decoration: none;
+color: black;
+}
+
+.navsubtabs li a:hover
+{
+color: #000;
+background: #AAE;
+border-color: #227;
+}
+
+.navsubtabs li a.current
+{
+background: white;
+border-bottom: 1px solid white;
+}
+
+/****************************************************/
+/** Vertical Navigation **/
+/****************************************************/
+.vnav {
+	margin-bottom: 10px;
+	margin-left: 20px;
+}
+.vnav li{
+	list-style-type: square; 
+	font-size: 8pt;
+}
+
+
+/****************************************************/
+/** Main Content **/
+/****************************************************/
+#contents
+{
+margin-right: 250px;
+padding: 0px;
+font-family: arial, sans-serif;
+min-height: 600px;
+}
+
+#content h2
+{
+border-left: 5px solid #4A8FD5;
+border-top: 2px solid #4A8FD5;
+border-bottom: 2px solid #4A8FD5;
+border-right: 150px solid #4A8FD5;
+padding: 3px 3px 3px 8px;
+margin-bottom: 10px;
+}
+
+#content h3
+{
+color: #4A8FD5;
+margin-top: 20px;
+margin-bottom: 10px;
+}
+
+#content ul{
+	margin-left: 40px;
+	margin-bottom: 10px;
+}
+#content li
+{
+list-style-type: circle;
+padding: 3px 3px 3px 3px;
+
+font-size: 10pt;
+}
+
+#content p
+{
+font-size: 10pt;
+margin-bottom: 10px;
+}
+
+#content table{
+	font-size: 10pt;
+}
+#content table tr{
+	border-bottom: 1px solid #cccccc;
+}
+#content table tr:hover{
+	background-color: #FFFCD5;
+}
+#content table td{
+	padding: 3px;
+}
+#content table th{
+	padding: 3px;
+	background-color: #efefef;
+}
+
+#content table.aero th{
+	padding: 5px;
+	background-color: #efefef;
+	text-align: right;
+}
+#content table.aero td{
+	padding: 5px;
+	font-weight: bold;
+}
+
+
+
+
+
+
+
+
+

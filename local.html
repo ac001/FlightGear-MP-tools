@@ -6,7 +6,7 @@
     <script>
       window.onload = function() {
 		var foo = document.getElementById("holder")
-        var s = new WebSocket("ws://flightgear.daffodil.uk.com:5050/");
+        var s = new WebSocket("ws://localhost:5050/");
         s.onopen = function(e) { 
 			foo.value="connected"
 			//alert("connected");

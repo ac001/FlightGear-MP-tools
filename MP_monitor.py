@@ -7,8 +7,10 @@ import json
 from PyQt4 import QtCore
 from PyQt4 import QtNetwork
 
-MAX_NAME_SERVER = 20
-DNS_INTERVAL = 300 # seconds
+#MAX_NAME_SERVER = 20
+#NS_INTERVAL = 300 # seconds
+
+import mp_config
 
 
 ###############################################
@@ -21,7 +23,7 @@ class DnsLookupThread(QtCore.QThread):
 		#print "\t#Init DNS"
 
 		self.timer = QtCore.QTimer(self)
-		self.timer.setInterval(DNS_INTERVAL * 1000)
+		self.timer.setInterval(mp_config.DNS_INTERVAL * 1000)
 		self.connect(self.timer, QtCore.SIGNAL("timeout()"), self.on_timer)
 
 		self.hosts = {}
@@ -55,7 +57,7 @@ class DnsLookupThread(QtCore.QThread):
 		"""Looks up all servers in range 1 to MAX_NAME_SERVER"""
 		print "\tLookup All"
 		results = {}
-		for server_no in range(1, MAX_NAME_SERVER + 1):
+		for server_no in range(1, mp_config.MAX_NAME_SERVER + 1):
 			self.lookup(server_no)
 			#ok, domain_or_error, ip_address = self.lookup(server_no)
 			#if ok:
@@ -106,7 +108,7 @@ class MP_MonitorBot(QtCore.QObject):
 
 		#def run(self):
 		self.dnsLookupThread.start()
-		self.timer.start(500)
+		self.timer.start(100)
 
 		self.telnetString = {}
 		self.telnetTimer = {}
@@ -117,6 +119,7 @@ class MP_MonitorBot(QtCore.QObject):
 		self.connect(self.server, QtCore.SIGNAL("newConnection()"), self.on_server_connection)
 		self.server.listen(QtNetwork.QHostAddress(QtNetwork.QHostAddress.Any), 5050)
 		self.clientSockets = {}
+		self.increment = 0
 
 	def on_server_connection(self):
 		
@@ -168,10 +171,11 @@ class MP_MonitorBot(QtCore.QObject):
 		print "delete later"
 
 	def on_timer(self):
+		self.increment += 1
 		epo = QtCore.QDateTime.currentDateTime().toTime_t()
 		print epo, len(self.ip2host)
 		for idx in self.clientSockets:
-			ba = QtCore.QByteArray('\x00' + str(epo) + '\xff')
+			ba = QtCore.QByteArray('\x00' + str(epo) + " " + str(self.increment) + '\xff')
 			self.clientSockets[idx].write(ba)
 		if len(self.ip2host) == 0:
 			return

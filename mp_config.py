@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from PyQt4 import QtCore
 
 MAX_NAME_SERVER = 30 
 
@@ -9,4 +10,9 @@ MASTER_MACHINE = 'http://localhost:8080'
 UPDATE_DNS = "%s/update/dns/" % MASTER_MACHINE
 
 
-DNS_INTERVAL = 5
+DNS_INTERVAL = 10
+
+
+fileInfo = QtCore.QFileInfo("./LOCAL.txt")
+print "LOCAL.txt="  if  fileInfo.exists() else "Remote"
+	

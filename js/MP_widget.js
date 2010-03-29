@@ -299,9 +299,21 @@ this.create_socket = function (){
 						//rec.set('heading', pilots[rec.id].heading);
 						//rec.set('pitch', pilots[rec.id].pitch);
 						//rec.set('roll', pilots[rec.id].roll);
+						if(self.markers[r.callsign].length == 10){
+							var marker = self.markers[r.callsign].pop();
+							marker.setMap(null);
+							
+						}
+						self.markers[r.callsign][0].setIcon(icons.yellow_blip);
 						var latlng = new google.maps.LatLng(r.lat, r.lng);
-						self.markers[r.callsign].setPosition(latlng); // = new google.maps.Marker({
-
+						//self.markers[r.callsign][0].setPosition(latlng); // = new google.maps.Marker({
+						var marker = new google.maps.Marker({
+													position: latlng, 
+													map: self.Map,
+													title: r.callsign,
+													icon: icons.red_blip
+						});
+						self.markers[r.callsign].unshift(marker);
 
 						delete pilots[rec.id]
 					}else{
@@ -327,11 +339,14 @@ this.create_socket = function (){
 			var pRec = new PilotRecord(pilots[p], p);
 			self.pilotsStore.add(pRec);
 			var latlng = new google.maps.LatLng(pilots[p].lat, pilots[p].lng);
-			self.markers[pilots[p].callsign] = new google.maps.Marker({
+			self.markers[pilots[p].callsign] = new Array();
+			var marker = new google.maps.Marker({
 										position: latlng, 
 										map: self.Map,
 										title: pilots[p].callsign,
+										icon: icons.red_blip
 			});
+			self.markers[pilots[p].callsign].push(marker);
 			delete pilots[p]
 		}
 		//* Update count labels

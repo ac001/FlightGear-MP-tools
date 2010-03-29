@@ -25,6 +25,9 @@ $domain = file_exists('./LOCAL.txt') ? 'localhost' : 'flightgear.daffodil.uk.com
 <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
 <script type="text/javascript">
 
+	var icons = {};
+	icons.red_blip 		= 'images/red_dot.png';
+	icons.yellow_blip 	= 'images/yellow_dot.png';
 
 	var SOCKET_ADDRESS = "ws://<?php echo $domain; ?>:5050/";
 

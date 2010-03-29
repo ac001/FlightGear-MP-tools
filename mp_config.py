@@ -13,6 +13,9 @@ UPDATE_DNS = "%s/update/dns/" % MASTER_MACHINE
 DNS_INTERVAL = 10
 
 
-fileInfo = QtCore.QFileInfo("./LOCAL.txt")
-print "LOCAL.txt="  if  fileInfo.exists() else "Remote"
+fileInfo = QtCore.QFileInfo('./LOCAL.txt')
+
+LOCAL = fileInfo.exists()
+
+WWW = 'localhost'  if  fileInfo.exists() else 'flightgear.daffodil.uk.com'
 	

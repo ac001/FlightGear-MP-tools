@@ -98,8 +98,6 @@ class MP_MonitorBot(QtCore.QObject):
 		self.ip2host = {}
 		
 
-
-
 		self.timer = QtCore.QTimer(self)
 		self.connect(self.timer, QtCore.SIGNAL("timeout()"), self.on_timer)
 
@@ -135,8 +133,8 @@ class MP_MonitorBot(QtCore.QObject):
 			os.append("HTTP/1.1 101 Web Socket Protocol Handshake\r\n")
 			os.append("Upgrade: WebSocket\r\n")
 			os.append("Connection: Upgrade\r\n")
-			os.append("WebSocket-Origin: http://localhost\r\n")
-			os.append("WebSocket-Location: ws://localhost:5050/\r\n")
+			os.append("WebSocket-Origin: http://%s\r\n" % mp_config.WWW)
+			os.append("WebSocket-Location: ws://%s:5050/\r\n" % mp_config.WWW)
 			#os.append("WebSocket-Protocol: sample\r\n\r\n")
 			os.append("\r\n")
 			os.append('\x00' + foo_str + '\xff')

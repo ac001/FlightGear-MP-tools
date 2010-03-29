@@ -14,7 +14,7 @@ DNS_INTERVAL = 500
 
 
 fileInfo = QtCore.QFileInfo('./LOCAL.txt')
-s
+
 LOCAL = fileInfo.exists()
 
 WWW = 'localhost'  if  fileInfo.exists() else 'flightgear.daffodil.uk.com'

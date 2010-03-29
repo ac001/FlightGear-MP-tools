@@ -225,6 +225,7 @@ this.create_socket = function (){
 		//alert("closed");
 		//foo.value="closed"
 		self.statusLabel.setText("Closed")
+		setTimeout(self.create_socket, 3000)
 	}
 
 	self.webSocket.onmessage = function(msg) { 
@@ -296,7 +297,7 @@ map_initialize();
 
 Ext.onReady(function(){
 	var widget = new MP_Widget();
-	setTimeout(widget.create_socket, 3000)
+	setTimeout(widget.create_socket, 3000);
 });
 
 

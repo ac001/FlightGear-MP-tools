@@ -123,11 +123,11 @@ class MP_MonitorBot(QtCore.QObject):
 		
 		socket = self.server.nextPendingConnection()
 		remote_host = str(socket.peerAddress().toString())
-		print "addr=", remote_host # socket.peerAddress().toString()
+		#print "addr=", remote_host # socket.peerAddress().toString()
 		if not self.clientSockets.has_key(remote_host):
 			self.clientSockets[remote_host] = socket
 			self.connect(self.clientSockets[remote_host], QtCore.SIGNAL("disconnected()"), lambda argg=remote_host: self.on_socket_delete_later(argg))
-			print "-------------------------------------\nconnection", socket, socket.state()
+			#print "-------------------------------------\nconnection", socket, socket.state()
 			foo_str = "%s" % QtCore.QTime.currentTime()
 			os = QtCore.QByteArray()
 			os.append("HTTP/1.1 101 Web Socket Protocol Handshake\r\n")
@@ -139,11 +139,12 @@ class MP_MonitorBot(QtCore.QObject):
 			os.append("\r\n")
 			os.append('\x00' + foo_str + '\xff')
 			socket.write(os)
-
+		print "Connection >>", (", ").join(self.clientSockets.keys())
 
 	def on_socket_delete_later(self, remote_address):
-		print "delete later", remote_address
+		##print "delete later", remote_address
 		del self.clientSockets[remote_address]
+		print "Dropped >>", (", ").join(self.clientSockets.keys())
 
 	def on_timer(self):
 		self.increment += 1

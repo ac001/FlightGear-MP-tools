@@ -72,7 +72,8 @@ this.render_altitude = function (v, meta, rec, rowIdx, colIdx, store){
 this.statusLabel = new Ext.Toolbar.TextItem({text:'Socket Status'});
 
 this.chkTrackSelectedRow = new Ext.form.Checkbox({
-	boxLabel: 'Track Selected Row'
+	boxLabel: 'Track Selected Row',
+	checked: true
 });
 //****************************************************************
 this.latLabel = new Ext.Toolbar.TextItem({text:'Lat: -0.00'});

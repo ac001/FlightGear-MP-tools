@@ -106,7 +106,7 @@ class MP_MonitorBot(QtCore.QObject):
 
 		#def run(self):
 		self.dnsLookupThread.start()
-		self.timer.start(1000)
+		self.timer.start(100)
 
 		self.telnetString = {}
 		self.telnetTimer = {}

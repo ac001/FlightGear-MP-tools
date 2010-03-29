@@ -5,7 +5,26 @@
 function MP_Widget(){
 
 var self = this;
-this.webSocket = '';
+
+this.webSocket = null;
+this.Map = null
+
+this.markers = {}
+
+this.map_initialize =  function () {
+	//return
+    var latlng = new google.maps.LatLng(37.613545, -122.357237); // KSFO
+    var myOptions = {
+      zoom: 12,
+      center: latlng,
+      mapTypeId: google.maps.MapTypeId.TERRAIN
+    };
+    self.Map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
+	google.maps.event.addDomListener(self.Map, 'idle', function(latlng) {
+		//FIXME - wtf this doent exist as event
+		//console.log("mousemove", latlng);
+	});
+  }
 
 
 this.render_callsign = function (v, meta, rec){
@@ -77,6 +96,7 @@ this.pilotMarkers = {};
 
 //* Pilots Datastore
 this.pilotsStore = new Ext.data.Store({
+	idProperty: 'callsign',
 	fields: [ 	{name: 'flag', type: 'int'},
 				{name: "callsign", type: 'string'},
 				{name: "server_ip", type: 'string'},
@@ -118,7 +138,17 @@ this.pilotsLookupGrid = new Ext.grid.GridPanel({
 	//TODO sm: pilotsSelectionModel,
 	columns: [  //TODO pilotsSelectionModel,
 				{header: 'CallSign',  dataIndex:'callsign', sortable: true, renderer: this.render_callsign},
-				{header: 'Aircraft',  dataIndex:'model', sortable: true}
+				{header: 'Aircraft',  dataIndex:'model', sortable: true, hidden: true},
+				{header: 'Lat', dataIndex:'lat', sortable: true, align: 'right',
+					renderer: function(v, meta, rec, rowIdx, colIdx, store){
+						return Ext.util.Format.number(v, '0.000');
+					}
+				},
+				{header: 'Lng', dataIndex:'lng', sortable: true, align: 'right',
+					renderer: function(v, meta, rec, rowIdx, colIdx, store){
+						return Ext.util.Format.number(v, '0.000');
+					}
+				}
 	],
 	listeners: {},
 	bbar: [this.pilotsSummaryCountLabel, '->',  this.statusLabel]
@@ -129,11 +159,12 @@ this.pilotsMainGrid = new Ext.grid.GridPanel({
 	iconCls: 'iconPilots',
 	autoScroll: true,
 	autoWidth: true,
+	enableHdMenu: false,
 	viewConfig: {emptyText: 'No pilots online', forceFit: true}, 
 	store: this.pilotsStore,
 	loadMask: true,
 	columns: [  //this.selModel,	
-		{header: 'F',  dataIndex:'flag', sortable: true, width: 20},
+		{header: 'F',  dataIndex:'flag', sortable: true, width: 40},
 		{header: 'CallSign',  dataIndex:'callsign', sortable: true, renderer: this.render_callsign},
 		{header: 'Aircraft',  dataIndex:'model', sortable: true},
 
@@ -197,7 +228,7 @@ this.viewport = new Ext.Viewport({
 		new Ext.TabPanel({
 			region: 'center', // a center region is ALWAYS required for border layout
 			deferredRender: false,
-			activeTab: 1,
+			activeTab: 0,
 			border: 0,
 			items: [
 				new Ext.Panel({
@@ -258,15 +289,20 @@ this.create_socket = function (){
 					//#console.log( rec.id);
 
 					if(pilots[rec.id]){
+						var r = pilots[rec.id]
 						//* Pilot exists so update
 						rec.set('flag', 0);
-						rec.set('lat', pilots[rec.id].lat);
-						rec.set('lng', pilots[rec.id].lng);
-						rec.set('alt', pilots[rec.id].alt);
+						rec.set('lat', r.lat);
+						rec.set('lng', r.lng);
+						rec.set('alt', r.alt);
 						//rec.set('alt', pilots[rec.id].alt);
 						//rec.set('heading', pilots[rec.id].heading);
 						//rec.set('pitch', pilots[rec.id].pitch);
 						//rec.set('roll', pilots[rec.id].roll);
+						var latlng = new google.maps.LatLng(r.lat, r.lng);
+						self.markers[r.callsign].setPosition(latlng); // = new google.maps.Marker({
+
+
 						delete pilots[rec.id]
 					}else{
 						var f = rec.get('flag');
@@ -287,10 +323,15 @@ this.create_socket = function (){
 		}
 		//* add new pilots_list
 		for(var p in pilots){
-			//console.log("add", p);
 			pilots[p].flag = 1;
 			var pRec = new PilotRecord(pilots[p], p);
 			self.pilotsStore.add(pRec);
+			var latlng = new google.maps.LatLng(pilots[p].lat, pilots[p].lng);
+			self.markers[pilots[p].callsign] = new google.maps.Marker({
+										position: latlng, 
+										map: self.Map,
+										title: pilots[p].callsign,
+			});
 			delete pilots[p]
 		}
 		//* Update count labels
@@ -305,14 +346,17 @@ this.create_socket = function (){
 	}
 }
 
-map_initialize();
+
 
 } /*** MP_Widget() */
 
 
 Ext.onReady(function(){
 	var widget = new MP_Widget();
+	widget.map_initialize();
 	setTimeout(widget.create_socket, 3000);
+	
+	
 });
 
 

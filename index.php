@@ -24,24 +24,11 @@ $domain = file_exists('./LOCAL.txt') ? 'localhost' : 'flightgear.daffodil.uk.com
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
 <script type="text/javascript">
-	var fgMap = null;
 
-var SOCKET_ADDRESS = "ws://<?php echo $domain; ?>:5050/";
 
-  function map_initialize() {
-	//return
-    var latlng = new google.maps.LatLng(37.613545, -122.357237); // KSFO
-    var myOptions = {
-      zoom: 12,
-      center: latlng,
-      mapTypeId: google.maps.MapTypeId.TERRAIN
-    };
-    fgMap = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
-	google.maps.event.addDomListener(fgMap, 'idle', function(latlng) {
-		//FIXME - wtf this doent exist as event
-		//console.log("mousemove", latlng);
-	});
-  }
+	var SOCKET_ADDRESS = "ws://<?php echo $domain; ?>:5050/";
+
+
 
 </script>
 

@@ -214,7 +214,7 @@ class MP_MonitorBot(QtCore.QObject):
 		if len(self.clientSockets) > 0:
 			for idx in self.clientSockets:
 				self.clientSockets[idx].write(ba)
-			print "send", (", ").join(self.clientSockets.keys())
+			#print "send", (", ").join(self.clientSockets.keys())
 		
 
 	#######################################################

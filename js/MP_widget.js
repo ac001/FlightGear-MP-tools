@@ -295,7 +295,8 @@ map_initialize();
 
 
 Ext.onReady(function(){
-	var s = new MP_Widget();
+	var widget = new MP_Widget();
+	setTimeout(widget.create_socket, 3000)
 });
 
 

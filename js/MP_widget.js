@@ -71,8 +71,9 @@ this.render_altitude = function (v, meta, rec, rowIdx, colIdx, store){
 
 this.statusLabel = new Ext.Toolbar.TextItem({text:'Socket Status'});
 
-
-
+this.chkTrackSelectedRow = new Ext.form.Checkbox({
+	boxLabel: 'Track Selected Row'
+});
 //****************************************************************
 this.latLabel = new Ext.Toolbar.TextItem({text:'Lat: -0.00'});
 this.lngLabel = new Ext.Toolbar.TextItem({text:'Lng: -0.00'});
@@ -87,7 +88,7 @@ var PilotRecord = Ext.data.Record.create([
 	{name: "model", type: 'string'},
 	{name: "lat", type: 'float'},
 	{name: "lng", type: 'float'},
-	{name: "alt", type: 'float'},
+	{name: "alt", type: 'int'},
 	{name: "heading", type: 'string'},
 	{name: "pitch", type: 'string'},
 	{name: "roll", type: 'string'}
@@ -105,7 +106,7 @@ this.pilotsStore = new Ext.data.Store({
 				{name: "model", type: 'string'},
 				{name: "lat", type: 'float'},
 				{name: "lng", type: 'float'},
-				{name: "alt", type: 'float'},
+				{name: "alt", type: 'int'},
 				{name: "heading", type: 'string'},
 				{name: "pitch", type: 'string'},
 				{name: "roll", type: 'string'}
@@ -124,7 +125,8 @@ this.pilotsLookupGrid = new Ext.grid.GridPanel({
 	autoScroll: true,
 	autoWidth: true,
 	tbar:[  //this.actionAdd, this.actionEdit, this.actionDelete, 
-			'-',// this.actionLabSelectToolbarButton,
+			//'-',// this.actionLabSelectToolbarButton,
+			this.chkTrackSelectedRow,
 			'->',
 			//Geo2.widgets.goto_www('Online', 'View rates on website', '/rates.php'),
 			{text: 'Connect', iconCls: 'iconRefresh', handler: function(){
@@ -134,7 +136,7 @@ this.pilotsLookupGrid = new Ext.grid.GridPanel({
 			}    
 	],
 	viewConfig: {emptyText: 'No pilots online', forceFit: true}, 
-	//sm: this.selModel,
+	sm: new Ext.grid.RowSelectionModel({singleSelect:true}),
 	store: this.pilotsStore,
 	loadMask: true,
 	//TODO sm: pilotsSelectionModel,
@@ -383,6 +385,14 @@ this.create_socket = function (){
 			self.markers[pilots[p].callsign] =  marker;
 			delete pilots[p]
 		}
+
+		if(self.chkTrackSelectedRow.getValue()){
+			var rec = self.pilotsLookupGrid.getSelectionModel().getSelected();
+			//console.log("rec", rec.get('callsign'));
+			var pLatLng = self.markers[rec.get('callsign')].getPosition()
+			self.Map.panTo(pLatLng);
+		}
+
 		//* Update count labels
 		var cnt = self.pilotsStore.getCount();
 		//console.log("cnt", cnt, "pilots.length", pilots);

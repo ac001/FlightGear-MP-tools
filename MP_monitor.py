@@ -221,7 +221,7 @@ class MP_MonitorBot(QtCore.QObject):
 					pilot['ident'] = parts[0]
 					pilot['lat'] = parts[4]
 					pilot['lng'] = parts[5]
-					pilot['alt'] = parts[6]
+					pilot['alt'] = parts[6].split(".")[0] if parts[6].find('.') > 0 else parts[6]
 					pilot['model'] = parts[10].split("/")[-1].replace('.xml', '')
 					pilots[callsign] = pilot
 					#print pilot

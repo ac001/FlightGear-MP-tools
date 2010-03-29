@@ -10,7 +10,7 @@ MASTER_MACHINE = 'http://localhost:8080'
 UPDATE_DNS = "%s/update/dns/" % MASTER_MACHINE
 
 
-DNS_INTERVAL = 10
+DNS_INTERVAL = 500
 
 
 fileInfo = QtCore.QFileInfo('./LOCAL.txt')

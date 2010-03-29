@@ -10,6 +10,8 @@ this.webSocket = null;
 this.Map = null
 
 this.markers = {}
+this.polyLines = {}
+this.polyCoordinates = {}
 
 this.map_initialize =  function () {
 	//return
@@ -153,7 +155,14 @@ this.pilotsLookupGrid = new Ext.grid.GridPanel({
 	listeners: {},
 	bbar: [this.pilotsSummaryCountLabel, '->',  this.statusLabel]
 });
-    
+this.pilotsLookupGrid.on("rowdblclick", function(grid, idx, e){
+	var rec = self.pilotsStore.getAt(idx);
+	var latlng = new google.maps.LatLng(rec.get('lat'), rec.get('lng'));
+	self.Map.panTo(latlng);
+	//alert(rec.get("callsign"));
+});    
+
+
 this.pilotsMainGrid = new Ext.grid.GridPanel({
 	title: 'Pilots Data',
 	iconCls: 'iconPilots',
@@ -299,14 +308,25 @@ this.create_socket = function (){
 						//rec.set('heading', pilots[rec.id].heading);
 						//rec.set('pitch', pilots[rec.id].pitch);
 						//rec.set('roll', pilots[rec.id].roll);
-						if(self.markers[r.callsign].length == 10){
+						/* if(self.markers[r.callsign].length == 10){
 							var marker = self.markers[r.callsign].pop();
 							marker.setMap(null);
 							
 						}
 						self.markers[r.callsign][0].setIcon(icons.yellow_blip);
+						*/
 						var latlng = new google.maps.LatLng(r.lat, r.lng);
-						//self.markers[r.callsign][0].setPosition(latlng); // = new google.maps.Marker({
+						self.markers[r.callsign].setPosition(latlng); // = new google.maps.Marker({
+
+
+						var path = self.polyLines[r.callsign].getPath();
+						
+						if(self.polyCoordinates[r.callsign].length == 10){
+							path.removeAt(9);
+						}
+						path.insertAt(0, latlng);
+						//paths.insertAt(0, latlng);
+						/* 
 						var marker = new google.maps.Marker({
 													position: latlng, 
 													map: self.Map,
@@ -314,7 +334,7 @@ this.create_socket = function (){
 													icon: icons.red_blip
 						});
 						self.markers[r.callsign].unshift(marker);
-
+						*/
 						delete pilots[rec.id]
 					}else{
 						var f = rec.get('flag');
@@ -339,14 +359,26 @@ this.create_socket = function (){
 			var pRec = new PilotRecord(pilots[p], p);
 			self.pilotsStore.add(pRec);
 			var latlng = new google.maps.LatLng(pilots[p].lat, pilots[p].lng);
-			self.markers[pilots[p].callsign] = new Array();
+			//self.markers[pilots[p].callsign] = new Array();
+			self.polyCoordinates[pilots[p].callsign] = [] //new google.maps.MVCArray(latlng);
+			var polyOptions = {
+				path: self.polyCoordinates[pilots[p].callsign],
+				strokeColor: 'red',
+				strokeOpacity: 1.0,
+				strokeWeight: 1
+			}
+			self.polyLines[pilots[p].callsign] = new google.maps.Polyline(polyOptions);
+			self.polyLines[pilots[p].callsign].setMap(self.Map);
+			//#//var path = 
+
 			var marker = new google.maps.Marker({
 										position: latlng, 
 										map: self.Map,
 										title: pilots[p].callsign,
 										icon: icons.red_blip
 			});
-			self.markers[pilots[p].callsign].push(marker);
+			//self.markers[pilots[p].callsign].push(marker);
+			self.markers[pilots[p].callsign] =  marker;
 			delete pilots[p]
 		}
 		//* Update count labels

@@ -50,7 +50,7 @@ var SOCKET_ADDRESS = "ws://<?php echo $domain; ?>:5050/";
 <!--<script type="text/javascript" src="js/FG_PilotsGrid.js"></script>-->
 
   
-<script type="text/javascript"  src="js/FGMap_main.js"></script> 
+<script type="text/javascript"  src="js/MP_widget.js"></script> 
 
 </head> 
 <body> 

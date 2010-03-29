@@ -211,10 +211,10 @@ class MP_MonitorBot(QtCore.QObject):
 		#print "\t>>", "p=", len(pilots),  "ms=", self.telnetTimer[host_address].msecsTo( QtCore.QTime.currentTime() ), "\thost=", host_address
 		json_str = json.dumps({'pilots': pilots})
 		ba = QtCore.QByteArray('\x00' + json_str + '\xff')
-		for idx in self.clientSockets:
-			print "send"
-			self.clientSockets[idx].write(ba)
-		
+		if len(self.clientSockets) > 0:
+			for idx in self.clientSockets:
+				self.clientSockets[idx].write(ba)
+			print "send", (", ").join(self.clientSockets.keys())
 		
 
 	#######################################################

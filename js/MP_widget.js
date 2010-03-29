@@ -222,7 +222,7 @@ this.create_socket = function (){
 	}
 
 	self.webSocket.onclose = function(msg) { 
-		alert("closed");
+		//alert("closed");
 		//foo.value="closed"
 		self.statusLabel.setText("Closed")
 	}
@@ -233,7 +233,7 @@ this.create_socket = function (){
 		
 		var pilots =  json['pilots'];
 		self.statusLabel.setText(pilots.length)
-		console.log(pilots);
+		//console.log(pilots);
 		//* loop thru existing pilots and update
 		if(self.pilotsStore.getCount() > 0){
 			//for(var idx=0; idx <= pilotsStore.getCount(); idx++){
@@ -242,7 +242,7 @@ this.create_socket = function (){
 				if(rec){
 					console.log( rec.id);
 
-					if(self.pilots[rec.id]){
+					if(pilots[rec.id]){
 						//* Pilot exists so update
 						rec.set('flag', 0);
 						rec.set('lat', pilots[rec.id].lat);

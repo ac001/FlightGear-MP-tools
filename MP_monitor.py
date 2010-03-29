@@ -106,45 +106,63 @@ class MP_MonitorBot(QtCore.QObject):
 
 		#def run(self):
 		self.dnsLookupThread.start()
-		self.timer.start(5000)
+		self.timer.start(500)
 
-		self.socketString = {}
-		self.socketTimer = {}
-		self.socket = {}
+		self.telnetString = {}
+		self.telnetTimer = {}
+		self.telnetSocket = {}
 		self.lastUpdate = None
 
 		self.server = QtNetwork.QTcpServer(self)
 		self.connect(self.server, QtCore.SIGNAL("newConnection()"), self.on_server_connection)
 		self.server.listen(QtNetwork.QHostAddress(QtNetwork.QHostAddress.Any), 5050)
+		self.clientSockets = {}
 
 	def on_server_connection(self):
 		
 		socket = self.server.nextPendingConnection()
-		self.connect(socket, QtCore.SIGNAL("disconnected()"), self.on_socket_delete_later)
-		print "-------------------------------------\nconnection", socket, socket.state()
-		foo_str = "<h1>helloooo - %s</h1>\n" % QtCore.QTime.currentTime()
-		os = QtCore.QByteArray()
-		os.append("HTTP/1.1 101 Web Socket Protocol Handshake\r\n")
-		os.append("Upgrade: WebSocket\"\r\n")
-		os.append("Connection: Upgrade\r\n")
-		os.append("WebSocket-Origin: http://localhost:5050\r\n")
-		os.append("WebSocket-Location: ws://localhost:5050\r\n")
-		os.append("WebSocket-Protocol: sample\r\n")
+		remote_host = str(socket.peerAddress().toString())
+		print "addr=", remote_host # socket.peerAddress().toString()
+		if not self.clientSockets.has_key(remote_host):
+			self.clientSockets[remote_host] = socket
+			self.connect(self.clientSockets[remote_host], QtCore.SIGNAL("disconnected()"), self.on_socket_delete_later)
+			print "-------------------------------------\nconnection", socket, socket.state()
+			foo_str = "%s" % QtCore.QTime.currentTime()
+			os = QtCore.QByteArray()
+			os.append("HTTP/1.1 101 Web Socket Protocol Handshake\r\n")
+			os.append("Upgrade: WebSocket\r\n")
+			os.append("Connection: Upgrade\r\n")
+			os.append("WebSocket-Origin: http://localhost\r\n")
+			os.append("WebSocket-Location: ws://localhost:5050/\r\n")
+			#os.append("WebSocket-Protocol: sample\r\n\r\n")
+			os.append("\r\n")
+			os.append('\x00' + foo_str + '\xff')
 
-		os.append("\r\n")
+			#print repr(s.recv(4096))
+			#resp = "HTTP/1.1 101 Web Socket Protocol Handshake\r\n"
+			#resp += "Upgrade: WebSocket\r\n"
+			#resp +=	"Connection: Upgrade\r\n"
+			#resp += "WebSocket-Origin: http://localhost\r\n"
+			#resp += "WebSocket-Location: ws://localhost:5050/\r\n"
+			#resp += "\r\n"
+			#resp += '\x00hello\xff'
+			#s.send(resp)
 
-		"""
-		os.append("HTTP/1.0 200 Ok\r\n")
-		os.append("Content-Type: text/html; charset=\"utf-8\"\r\n")
-		os.append("Content-length: %s\r\n" % len(foo_str))
-		os.append("\r\n")
-		"""
-		os.append(foo_str);
-		socket.write(os)
-		print socket.bytesToWrite()
-		#socket.flush()
-		#print socket.bytesToWrite()
-		#socket.disconnectFromHost()
+			#os.append("\r\n")
+			#os.append("\r\n")
+			"""
+			os.append("HTTP/1.0 200 Ok\r\n")
+			os.append("Content-Type: text/html; charset=\"utf-8\"\r\n")
+			os.append("Content-length: %s\r\n" % len(foo_str))
+			os.append("\r\n")
+			"""
+			#os.append(foo_str);
+			socket.write(os)
+			
+			#print socket.bytesToWrite()
+			#socket.flush()
+			#print socket.bytesToWrite()
+			#socket.disconnectFromHost()
 
 	def on_socket_delete_later(self):
 		print "delete later"
@@ -152,6 +170,9 @@ class MP_MonitorBot(QtCore.QObject):
 	def on_timer(self):
 		epo = QtCore.QDateTime.currentDateTime().toTime_t()
 		print epo, len(self.ip2host)
+		for idx in self.clientSockets:
+			ba = QtCore.QByteArray('\x00' + str(epo) + '\xff')
+			self.clientSockets[idx].write(ba)
 		if len(self.ip2host) == 0:
 			return
 		return
@@ -160,18 +181,18 @@ class MP_MonitorBot(QtCore.QObject):
 		#host_address = "mpserver02.flightgear.org"
 		for ip in self.ip2host:
 			host_address = self.ip2host[ip]
-			if not self.socket.has_key(host_address):
-				self.socket[host_address] = QtNetwork.QTcpSocket(self)
+			if not self.telnetSocket.has_key(host_address):
+				self.telnetSocket[host_address] = QtNetwork.QTcpSocket(self)
 				#print "create sock"
-				self.connect(self.socket[host_address], QtCore.SIGNAL("connected()"), lambda argg=host_address: self.on_socket_connected(argg))
-				self.connect(self.socket[host_address], QtCore.SIGNAL("disconnected()"), lambda argg=host_address: self.on_socket_disconnected(argg))
-				self.connect(self.socket[host_address], QtCore.SIGNAL("readyRead()"), lambda argg=host_address: self.on_socket_ready_read(argg))
-				#self.connect(self.socket, QtCore.SIGNAL("finished()"), self.on_socket_finished)
-			if self.socket[host_address].state() == QtNetwork.QAbstractSocket.UnconnectedState:
-				#print "connect,", host_address, "=", self.socket[host_address].state()
-				self.socketString[host_address] = ''
-				self.socketTimer[host_address] = QtCore.QTime.currentTime()
-				self.socket[host_address].connectToHost(host_address, 5001, QtCore.QIODevice.ReadOnly)
+				self.connect(self.telnetSocket[host_address], QtCore.SIGNAL("connected()"), lambda argg=host_address: self.on_socket_connected(argg))
+				self.connect(self.telnetSocket[host_address], QtCore.SIGNAL("disconnected()"), lambda argg=host_address: self.on_socket_disconnected(argg))
+				self.connect(self.telnetSocket[host_address], QtCore.SIGNAL("readyRead()"), lambda argg=host_address: self.on_socket_ready_read(argg))
+				#self.connect(self.telnetSocket, QtCore.SIGNAL("finished()"), self.on_socket_finished)
+			if self.telnetSocket[host_address].state() == QtNetwork.QAbstractSocket.UnconnectedState:
+				#print "connect,", host_address, "=", self.telnetSocket[host_address].state()
+				self.telnetString[host_address] = ''
+				self.telnetTimer[host_address] = QtCore.QTime.currentTime()
+				self.telnetSocket[host_address].connectToHost(host_address, 5001, QtCore.QIODevice.ReadOnly)
 			else:
 				#print "working", host_address
 				pass
@@ -180,18 +201,18 @@ class MP_MonitorBot(QtCore.QObject):
 		#print "on_socket_connected"
 		#pass
 	def on_socket_connected(self, host_address):
-		print "con", host_address, self.socketTimer[host_address].msecsTo( QtCore.QTime.currentTime() )
+		print "con", host_address, self.telnetTimer[host_address].msecsTo( QtCore.QTime.currentTime() )
 
 
 	def on_socket_ready_read(self, host_address):
-		self.socketString[host_address] = self.socketString[host_address] + str(self.socket[host_address].readAll())
+		self.telnetString[host_address] = self.telnetString[host_address] + str(self.telnetSocket[host_address].readAll())
 
 	def on_socket_disconnected(self, host_address):
-		#print "\t>> done", host_address, self.socketTimer[host_address].msecsTo( QtCore.QTime.currentTime() ),  len(self.socketString[host_address])
-		#sprint self.socketString
-		if len(self.socketString[host_address]) == 0:
+		#print "\t>> done", host_address, self.telnetTimer[host_address].msecsTo( QtCore.QTime.currentTime() ),  len(self.telnetString[host_address])
+		#sprint self.telnetString
+		if len(self.telnetString[host_address]) == 0:
 			return
-		lines = self.socketString[host_address].split("\n")
+		lines = self.telnetString[host_address].split("\n")
 		pilots = []
 		for line in lines:
 			if line.startswith("#") or line == "":
@@ -207,7 +228,7 @@ class MP_MonitorBot(QtCore.QObject):
 				pilots.append(pilot)
 				# self.emit(QtCore.SIGNAL("pilot"), pilot)
 		#print len(pilots)
-		#print "\t>>", "p=", len(pilots),  "ms=", self.socketTimer[host_address].msecsTo( QtCore.QTime.currentTime() ), "\thost=", host_address
+		#print "\t>>", "p=", len(pilots),  "ms=", self.telnetTimer[host_address].msecsTo( QtCore.QTime.currentTime() ), "\thost=", host_address
 		#print json.dumps({'pilots': pilots})
 		
 		

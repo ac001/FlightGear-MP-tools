@@ -5,14 +5,28 @@
     <meta charset="UTF-8">
     <script>
       window.onload = function() {
+		var foo = document.getElementById("holder")
         var s = new WebSocket("ws://localhost:5050/");
-        s.onopen = function(e) { alert("opened"); }
-        s.onclose = function(e) { alert("closed"); }
-        s.onmessage = function(e) { alert("got: " + e.data); }
+        s.onopen = function(e) { 
+			foo.value="connected"
+			//alert("connected");
+
+		}
+        s.onclose = function(e) { 
+			//#alert("closed");
+			foo.value="closed"
+		}
+        s.onmessage = function(e) { 
+			//#alert("got: " + e.data); 
+			
+			foo.value = e.data
+		}
       };
+		//<div id="sholder" style="width:600px; height:300px"></div>
     </script>
   </head>
     <body>
-      <div id="holder" style="width:600px; height:300px"></div>
+      
+		<textarea id="holder" width="800" rows="20"></textarea>
     </body>
 </html>

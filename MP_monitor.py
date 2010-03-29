@@ -106,7 +106,7 @@ class MP_MonitorBot(QtCore.QObject):
 
 		#def run(self):
 		self.dnsLookupThread.start()
-		self.timer.start(100)
+		self.timer.start(1000)
 
 		self.telnetString = {}
 		self.telnetTimer = {}
@@ -128,7 +128,7 @@ class MP_MonitorBot(QtCore.QObject):
 			self.clientSockets[remote_host] = socket
 			self.connect(self.clientSockets[remote_host], QtCore.SIGNAL("disconnected()"), lambda argg=remote_host: self.on_socket_delete_later(argg))
 			#print "-------------------------------------\nconnection", socket, socket.state()
-			foo_str = "%s" % QtCore.QTime.currentTime()
+			foo_str = "{handshake: 'ok'}"; "%s" % QtCore.QTime.currentTime()
 			os = QtCore.QByteArray()
 			os.append("HTTP/1.1 101 Web Socket Protocol Handshake\r\n")
 			os.append("Upgrade: WebSocket\r\n")
@@ -158,7 +158,7 @@ class MP_MonitorBot(QtCore.QObject):
 		#return
 		#print self.host2ip	
 		#return
-		host_address = "mpserver01.flightgear.org"
+		host_address = "mpserver02.flightgear.org"
 		#for ip in self.ip2host:
 		#host_address = self.ip2host[ip]
 		if not self.telnetSocket.has_key(host_address):
@@ -189,11 +189,11 @@ class MP_MonitorBot(QtCore.QObject):
 
 	def on_socket_disconnected(self, host_address):
 		#print "\t>> done", host_address, self.telnetTimer[host_address].msecsTo( QtCore.QTime.currentTime() ),  len(self.telnetString[host_address])
-		#sprint self.telnetString
+		#print self.telnetString[host_address]
 		if len(self.telnetString[host_address]) == 0:
 			return
 		lines = self.telnetString[host_address].split("\n")
-		pilots = []
+		pilots = {}
 		for line in lines:
 			if line.startswith("#") or line == "":
 				## reserved bits
@@ -201,14 +201,32 @@ class MP_MonitorBot(QtCore.QObject):
 			else:
 				parts =  line.split(" ")
 				#print parts
-				pilot = {}
-				pilot['callsign'] = parts[0].split("@")[0]
-				pilot['ident'] = parts[0]
-				pilot['lat'] = parts[1]
-				pilot['lng'] = parts[2]
-				pilots.append(pilot)
+				#sc3@LOCAL: -4854301.177206 4143809.601100 94760.548555 0.856340 139.514712 
+				#  0            1              2            3            4       5
+				##16404.199475 1.825307 -0.713956 1.824345 Aircraft/c172p/Models/c172p.xml
+				# 6             7          8         9        10
+				#return
+				## ta xiii
+				#Origin, LastPos[X], LastPos[Y], LastPos[Z], PlayerPosGeod[Lat], PlayerPosGeod[Lon], PlayerPosGeod[Alt],
+				#LastOrientation[X], LastOrientation[Y], LastOrientation[Z], ModelName
+				callsign = parts[0].split("@")[0].strip()
+				if callsign != '':
+					pilot = {}
+					
+					pilot['callsign'] = callsign
+					pilot['ident'] = parts[0]
+					pilot['lat'] = parts[4]
+					pilot['lng'] = parts[5]
+					pilot['alt'] = parts[6]
+					pilot['model'] = parts[10].split("/")[-1].replace('.xml', '')
+					pilots[callsign] = pilot
+					#print pilot
+					if callsign == "crazy-b":
+						#print parts
+						pass
+				#return
 				# self.emit(QtCore.SIGNAL("pilot"), pilot)
-		#print len(pilots)
+		print len(pilots)
 		#print "\t>>", "p=", len(pilots),  "ms=", self.telnetTimer[host_address].msecsTo( QtCore.QTime.currentTime() ), "\thost=", host_address
 		json_str = json.dumps({'pilots': pilots})
 		ba = QtCore.QByteArray('\x00' + json_str + '\xff')

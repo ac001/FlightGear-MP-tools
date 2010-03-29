@@ -9,6 +9,7 @@ this.webSocket = '';
 
 
 this.render_callsign = function (v, meta, rec){
+	return v
 	switch(rec.get('flag')){
 		case 0: //* pilot is flying
 			meta.css = 'fg_pilot_fly';
@@ -24,6 +25,7 @@ this.render_callsign = function (v, meta, rec){
 }
 
 this.render_altitude = function (v, meta, rec, rowIdx, colIdx, store){
+	return v;
 	if(v < 1000){
 		color = '#931429';
 	}else if(v < 2000){
@@ -64,7 +66,7 @@ var PilotRecord = Ext.data.Record.create([
 	{name: "model", type: 'string'},
 	{name: "lat", type: 'float'},
 	{name: "lng", type: 'float'},
-	{name: "alt", type: 'int'},
+	{name: "alt", type: 'float'},
 	{name: "heading", type: 'string'},
 	{name: "pitch", type: 'string'},
 	{name: "roll", type: 'string'}
@@ -81,7 +83,7 @@ this.pilotsStore = new Ext.data.Store({
 				{name: "model", type: 'string'},
 				{name: "lat", type: 'float'},
 				{name: "lng", type: 'float'},
-				{name: "alt", type: 'int'},
+				{name: "alt", type: 'float'},
 				{name: "heading", type: 'string'},
 				{name: "pitch", type: 'string'},
 				{name: "roll", type: 'string'}
@@ -134,6 +136,7 @@ this.pilotsMainGrid = new Ext.grid.GridPanel({
 		{header: 'F',  dataIndex:'flag', sortable: true, width: 20},
 		{header: 'CallSign',  dataIndex:'callsign', sortable: true, renderer: this.render_callsign},
 		{header: 'Aircraft',  dataIndex:'model', sortable: true},
+
 		{header: 'Lat', dataIndex:'lat', sortable: true, align: 'right',
 			renderer: function(v, meta, rec, rowIdx, colIdx, store){
 				return Ext.util.Format.number(v, '0.000');
@@ -145,7 +148,7 @@ this.pilotsMainGrid = new Ext.grid.GridPanel({
 			}
 		},
 		{header: 'Alt', dataIndex:'alt', sortable: true, align: 'right',
-			renderer: this.render_altitude
+			DEADrenderer: this.render_altitude
 		},
 		{header: 'Heading', dataIndex:'heading', sortable: true, align: 'right',
 			renderer: function(v, meta, rec, rowIdx, colIdx, store){
@@ -212,6 +215,14 @@ this.viewport = new Ext.Viewport({
 
 
 this.create_socket = function (){
+
+	var is_chrome = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
+	if(!is_chrome){
+		var s = "This page uses websocket's and WebSocket is only available with Google Chrome atmo";
+		alert(s);
+		return;
+	}
+
 	self.webSocket = new WebSocket(SOCKET_ADDRESS);
 
 	self.webSocket.onopen = function(msg) { 
@@ -231,7 +242,10 @@ this.create_socket = function (){
 	self.webSocket.onmessage = function(msg) { 
 		var json = Ext.decode(msg.data);
 		//#console.log("ok-pilots", json);
-		
+		if(!json['pilots']){
+			console.log("No pilots", json);
+			return;
+		}
 		var pilots =  json['pilots'];
 		self.statusLabel.setText(pilots.length)
 		//console.log(pilots);
@@ -241,13 +255,14 @@ this.create_socket = function (){
 			self.pilotsStore.each( function(rec){	
 				//var rec = pilotsStore.getAt(idx);
 				if(rec){
-					console.log( rec.id);
+					//#console.log( rec.id);
 
 					if(pilots[rec.id]){
 						//* Pilot exists so update
 						rec.set('flag', 0);
 						rec.set('lat', pilots[rec.id].lat);
 						rec.set('lng', pilots[rec.id].lng);
+						rec.set('alt', pilots[rec.id].alt);
 						//rec.set('alt', pilots[rec.id].alt);
 						//rec.set('heading', pilots[rec.id].heading);
 						//rec.set('pitch', pilots[rec.id].pitch);

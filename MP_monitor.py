@@ -3,7 +3,7 @@
 
 import sys
 import signal
-import json
+#import json
 from PyQt4 import QtCore
 from PyQt4 import QtNetwork
 

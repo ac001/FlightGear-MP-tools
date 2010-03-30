@@ -159,7 +159,7 @@ class MP_MonitorBot(QtCore.QObject):
 		#return
 		#print self.host2ip	
 		#return
-		host_address = "mpserver02.flightgear.org"
+		host_address = "mpserver01.flightgear.org"
 		#for ip in self.ip2host:
 		#host_address = self.ip2host[ip]
 		if not self.telnetSocket.has_key(host_address):
@@ -213,11 +213,12 @@ class MP_MonitorBot(QtCore.QObject):
 				#Origin, LastPos[X], LastPos[Y], LastPos[Z], 
 				# PlayerPosGeod[Lat], PlayerPosGeod[Lon], PlayerPosGeod[Alt],
 				#LastOrientation[X], LastOrientation[Y], LastOrientation[Z], ModelName
-				callsign_raw = parts[0].split("@")[0].strip()
-				if callsign_raw != '':
+				callsign = parts[0].split("@")[0].strip()
+				#print callsign_raw
+				if callsign != '':
 					## Clean up unicode, not dure what this ia about but caused json to die
-					callsign = self.clean_callsign(callsign_raw)
-				
+					##callsign = self.clean_callsign(callsign_raw)
+					#print   callsign_raw + "=" + callsign
 					pilot = {}
 					
 					pilot['callsign'] = callsign
@@ -235,7 +236,7 @@ class MP_MonitorBot(QtCore.QObject):
 
 		#print "\t>>", "p=", len(pilots),  "ms=", self.telnetTimer[host_address].msecsTo( QtCore.QTime.currentTime() ), "\thost=", host_address
 		#return
-		json_str = json.dumps({'pilots': pilots})
+		json_str = json.dumps({'pilots': pilots}, ensure_ascii=False)
 		ba = QtCore.QByteArray('\x00' + json_str + '\xff')
 		if len(self.clientSockets) > 0:
 			for idx in self.clientSockets:
@@ -285,10 +286,9 @@ class MP_MonitorBot(QtCore.QObject):
 			c = ord(character)
 			if c == 45: ## allow "-"
 				callsign += character
-			elif c >= 48 and c <= 90: # allow 0-9, a-z A-Z
+			if c > 48 and c < 90: # allow 0-9, a-z A-Z
 				callsign += character
-			else:
-				pass
+
 		return callsign
 
 

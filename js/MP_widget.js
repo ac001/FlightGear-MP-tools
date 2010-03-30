@@ -2,12 +2,24 @@
 //FG.map = {};
 //FG.pilots_list = {};
 
+MyOverlay.prototype = new google.maps.OverlayView();
+MyOverlay.prototype.onAdd = function() { }
+MyOverlay.prototype.onRemove = function() { }
+MyOverlay.prototype.draw = function() { }
+function MyOverlay(map) { this.setMap(map); }
+
+
+
+//*******************************************************************************
+// Core Object
+//*******************************************************************************
 function MP_Widget(){
 
 var self = this;
 
 this.webSocket = null;
 this.Map = null
+this.myOverlay = null
 
 this.markers = {} //* Aircraft Markers
 this.markersInfo = {} //** Experimantal info window
@@ -19,8 +31,10 @@ this.polyCoordinates = {} //* Coordinated from polyLines
 this.icons = {};
 this.icons.blip_red 		= 'images/red_dot.png';
 this.icons.blip_yellow 		= 'images/yellow_dot.png';
+
+this.icons.level_blue			= 'images/level_blue.png';
 this.icons.up_blue			= 'images/up_blue.png';
-this.icons.down_blue		= 'images/up_blue.png';
+this.icons.down_blue		= 'images/down_blue.png';
 
 
 this.map_initialize =  function () {
@@ -32,11 +46,13 @@ this.map_initialize =  function () {
       mapTypeId: google.maps.MapTypeId.TERRAIN
     };
     self.Map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
-	google.maps.event.addDomListener(self.Map, 'idle', function(latlng) {
+	//google.maps.event.addDomListener(self.Map, 'idle', function(latlng) {
 		//FIXME - wtf this doent exist as event
 		//console.log("mousemove", latlng);
-	});
-  }
+	//});
+	self.myOverlay = new MyOverlay(self.Map);
+	
+}
 
 
 this.render_callsign = function (v, meta, rec){
@@ -154,6 +170,11 @@ this.pilotsLookupGrid = new Ext.grid.GridPanel({
 	columns: [  //TODO pilotsSelectionModel,
 				{header: 'CallSign',  dataIndex:'callsign', sortable: true, renderer: this.render_callsign},
 				{header: 'Aircraft',  dataIndex:'model', sortable: true, hidden: true},
+				{header: 'Alt', dataIndex:'alt', sortable: true, align: 'right',
+					renderer: function(v, meta, rec, rowIdx, colIdx, store){
+						return v;
+					}
+				},
 				{header: 'Lat', dataIndex:'lat', sortable: true, align: 'right',
 					renderer: function(v, meta, rec, rowIdx, colIdx, store){
 						return Ext.util.Format.number(v, '0.000');
@@ -172,7 +193,6 @@ this.pilotsLookupGrid.on("rowdblclick", function(grid, idx, e){
 	var rec = self.pilotsStore.getAt(idx);
 	var latlng = new google.maps.LatLng(rec.get('lat'), rec.get('lng'));
 	self.Map.panTo(latlng);
-	//alert(rec.get("callsign"));
 });    
 
 
@@ -300,8 +320,9 @@ this.create_socket = function (){
 			return;
 		}
 		var pilots =  json['pilots'];
-		self.statusLabel.setText(pilots.length)
-		//console.log(pilots);
+		self.statusLabel.setText(pilots.length);
+		var projection = self.myOverlay.getProjection();
+		console.log(pilots);
 		//* loop thru existing pilots and update
 		if(self.pilotsStore.getCount() > 0){
 			//for(var idx=0; idx <= pilotsStore.getCount(); idx++){
@@ -389,27 +410,20 @@ this.create_socket = function (){
 			self.polyLines[pilots[p].callsign].setMap(self.Map);
 
 			//var foo = new google.maps.
-			console.log(self.Map)
+			//console.log(self.Map)
+			//console.log(self.myOverlay.getProjection().fromLatLngToDivPixel(latlng));
+			var div = document.createElement("div");
+			div.appendChild(document.createTextNode(pilots[p].callsign));
+			//document.body.appendChild(div)
+			//document.getElementById("map_canvas").appendChild(div);
+
 			//#//var path = 
 			var marker = new google.maps.Marker({
 										position: latlng, 
 										map: self.Map,
 										title: pilots[p].callsign,
-										icon: self.icons.up_blue
+										icon: self.icons.level_blue
 			});
-			/*var marker = new google.maps.Marker({
-										position: latlng, 
-										map: self.Map,
-										title: "<div><b>YES</b></div>",
-										icon: self.icons.up_blue
-			});
-			*/
-			//console.log(marker.gm_accessors_);
-			//var div = document.createElement('DIV');
-			//var txt = document.createTextNode("YES");
-			//div.appendChild(txt);
-			//#marker.appendChild(div);
-			//console.log(marker);
 			self.markers[pilots[p].callsign] =  marker;
 			delete pilots[p]
 		}

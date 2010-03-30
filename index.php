@@ -34,12 +34,19 @@ var WEB_SOCKET_ADDRESS = "ws://<?php echo $domain; ?>:5050/";
 <!--<script type="text/javascript" src="js/FG_PilotsGrid.js"></script>-->
 <style>
 .pilot_marker{
-	background-color: black;
-	
+	position: absolute;
+	min-width: 40px;
+	background-color: #333333;
+	border: 1px outset black;
 	color: white;
 	font-family: sans-serif;
 	font-size: 7pt;
-	padding: 3px;
+	padding: 2px 5px;
+	
+	
+}
+.pilot_marker p{
+		
 }
 
 </style>

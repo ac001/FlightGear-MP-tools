@@ -1,69 +1,44 @@
-//var FG = {};
-//FG.map = {};
-//FG.pilots_list = {};
-/*
-MyOverlay.prototype = new google.maps.OverlayView();
-MyOverlay.prototype.onAdd = function() { }
-MyOverlay.prototype.onRemove = function() { }
-MyOverlay.prototype.draw = function() { }
-function MyOverlay(map) { this.setMap(map); }
-*/
-function USGSOverlay(callsign, latlng, map) {
+
+//*******************************************************************************
+// Callsign Overlay Object
+//*******************************************************************************
+function CallsignOverlay(callsign, latlng, map) {
 	this.latlng_ = latlng;
 	this.callsign_ = callsign;
+
 	this.map_ = map;
 	this.div_ = null;
-
-	// Explicitly call setMap() on this overlay
 	this.setMap(map);
 }
 
-USGSOverlay.prototype = new google.maps.OverlayView();
+CallsignOverlay.prototype = new google.maps.OverlayView();
 
-USGSOverlay.prototype.onAdd = function() {
-
-  // Note: an overlay's receipt of onAdd() indicates that
-  // the map's panes are now available for attaching
-  // the overlay to the map via the DOM.
-
-  // Create the DIV and set some basic attributes.
+CallsignOverlay.prototype.onAdd = function() {
 	var div = document.createElement('DIV');
-	div.style.borderStyle = "none";
-	div.style.borderWidth = "0px";
-	div.style.position = "absolute";
-	//div.style.backgroundColor = "black";
 	div.className = 'pilot_marker';
 
 	var para = document.createElement("p");
 	para.appendChild(document.createTextNode(this.callsign_));
 	div.appendChild(para);
-  
 
-  // Set the overlay's div_ property to this DIV
-  this.div_ = div;
-
-  // We add an overlay to a map via one of the map's panes.
-  // We'll add this overlay to the overlayImage pane.
-  var panes = this.getPanes();
-  panes.overlayLayer.appendChild(div);
+	this.div_ = div;
+	var panes = this.getPanes();
+	panes.overlayLayer.appendChild(div);
 }
 
-USGSOverlay.prototype.draw = function() {
-  var point = this.getProjection().fromLatLngToDivPixel(this.latlng_);
-
-  // Resize the image's DIV to fit the indicated dimensions.
-  var div = this.div_;
-  div.style.left = point.x + 'px';
-  div.style.top = point.y + 'px';
-  //div.style.width = '100px';
-  //div.style.height = '20px';
+CallsignOverlay.prototype.draw = function() {
+	var point = this.getProjection().fromLatLngToDivPixel(this.latlng_);
+	var div = this.div_;
+	div.style.left = point.x + 'px';
+	div.style.top = point.y + 'px';
 }
 
-USGSOverlay.prototype.setPosition = function(latlng) {
+CallsignOverlay.prototype.setPosition = function(latlng) {
 	var point =  this.getProjection().fromLatLngToDivPixel(latlng);
 	this.div_.style.left = point.x + 'px';
 	this.div_.style.top = point.y + 'px';
 }
+
 //*******************************************************************************
 // Core Object
 //*******************************************************************************
@@ -502,7 +477,7 @@ this.create_socket = function (){
 									icon: self.icons.level_blue
 			});
 
-			self.callsignOverlays[pilots[p].callsign] = new USGSOverlay(pilots[p].callsign, latlng, self.Map);
+			self.callsignOverlays[pilots[p].callsign] = new CallsignOverlay(pilots[p].callsign, latlng, self.Map);
 	
 
 			//** Create the PolyLines and Coordinates object

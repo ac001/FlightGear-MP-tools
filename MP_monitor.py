@@ -213,8 +213,11 @@ class MP_MonitorBot(QtCore.QObject):
 				#Origin, LastPos[X], LastPos[Y], LastPos[Z], 
 				# PlayerPosGeod[Lat], PlayerPosGeod[Lon], PlayerPosGeod[Alt],
 				#LastOrientation[X], LastOrientation[Y], LastOrientation[Z], ModelName
-				callsign = parts[0].split("@")[0].strip()
-				if callsign != '':
+				callsign_raw = parts[0].split("@")[0].strip()
+				if callsign_raw != '':
+					## Clean up unicode, not dure what this ia about but caused json to die
+					callsign = self.clean_callsign(callsign_raw)
+				
 					pilot = {}
 					
 					pilot['callsign'] = callsign
@@ -225,14 +228,13 @@ class MP_MonitorBot(QtCore.QObject):
 					pilot['model'] = parts[10].split("/")[-1].replace('.xml', '')
 					pilots[callsign] = pilot
 					#print pilot
-					if callsign == "crazy-b":
-						#print parts
-						pass
+	
 				#return
 				# self.emit(QtCore.SIGNAL("pilot"), pilot)
 		#print len(pilots)
 
 		#print "\t>>", "p=", len(pilots),  "ms=", self.telnetTimer[host_address].msecsTo( QtCore.QTime.currentTime() ), "\thost=", host_address
+		#return
 		json_str = json.dumps({'pilots': pilots})
 		ba = QtCore.QByteArray('\x00' + json_str + '\xff')
 		if len(self.clientSockets) > 0:
@@ -275,6 +277,19 @@ class MP_MonitorBot(QtCore.QObject):
 		#print "send_to_master", host_name, ip_address
 		pass
 
+
+	def clean_callsign(self, callsign_raw):
+		callsign = ''
+		for idx in range(0, len(callsign_raw)):
+			character = callsign_raw[idx]
+			c = ord(character)
+			if c == 45: ## allow "-"
+				callsign += character
+			elif c >= 48 and c <= 90: # allow 0-9, a-z A-Z
+				callsign += character
+			else:
+				pass
+		return callsign
 
 
 ##################

@@ -9,9 +9,19 @@ var self = this;
 this.webSocket = null;
 this.Map = null
 
-this.markers = {}
-this.polyLines = {}
-this.polyCoordinates = {}
+this.markers = {} //* Aircraft Markers
+this.markersInfo = {} //** Experimantal info window
+this.polyLines = {} //* Poly line object
+this.polyCoordinates = {} //* Coordinated from polyLines
+
+
+
+this.icons = {};
+this.icons.blip_red 		= 'images/red_dot.png';
+this.icons.blip_yellow 		= 'images/yellow_dot.png';
+this.icons.up_blue			= 'images/up_blue.png';
+this.icons.down_blue		= 'images/up_blue.png';
+
 
 this.map_initialize =  function () {
 	//return
@@ -266,7 +276,7 @@ this.create_socket = function (){
 		return;
 	}
 
-	self.webSocket = new WebSocket(SOCKET_ADDRESS);
+	self.webSocket = new WebSocket(WEB_SOCKET_ADDRESS);
 
 	self.webSocket.onopen = function(msg) { 
 		//foo.value="connected"
@@ -360,29 +370,46 @@ this.create_socket = function (){
 		}
 		//* add new pilots_list
 		for(var p in pilots){
+			
 			pilots[p].flag = 1;
 			var pRec = new PilotRecord(pilots[p], p);
 			self.pilotsStore.add(pRec);
 			var latlng = new google.maps.LatLng(pilots[p].lat, pilots[p].lng);
 			//self.markers[pilots[p].callsign] = new Array();
+
+			//** Create the PolyLines and Coordinates object
 			self.polyCoordinates[pilots[p].callsign] = new google.maps.MVCArray();
 			var polyOptions = {
 				path: self.polyCoordinates[pilots[p].callsign],
-				strokeColor: 'red',
+				strokeColor: 'blue',
 				strokeOpacity: 1.0,
 				strokeWeight: 1
 			}
 			self.polyLines[pilots[p].callsign] = new google.maps.Polyline(polyOptions);
 			self.polyLines[pilots[p].callsign].setMap(self.Map);
-			//#//var path = 
 
+			//var foo = new google.maps.
+			console.log(self.Map)
+			//#//var path = 
 			var marker = new google.maps.Marker({
 										position: latlng, 
 										map: self.Map,
 										title: pilots[p].callsign,
-										icon: icons.red_blip
+										icon: self.icons.up_blue
 			});
-			//self.markers[pilots[p].callsign].push(marker);
+			/*var marker = new google.maps.Marker({
+										position: latlng, 
+										map: self.Map,
+										title: "<div><b>YES</b></div>",
+										icon: self.icons.up_blue
+			});
+			*/
+			//console.log(marker.gm_accessors_);
+			//var div = document.createElement('DIV');
+			//var txt = document.createTextNode("YES");
+			//div.appendChild(txt);
+			//#marker.appendChild(div);
+			//console.log(marker);
 			self.markers[pilots[p].callsign] =  marker;
 			delete pilots[p]
 		}
@@ -390,8 +417,10 @@ this.create_socket = function (){
 		if(self.chkTrackSelectedRow.getValue()){
 			var rec = self.pilotsLookupGrid.getSelectionModel().getSelected();
 			//console.log("rec", rec.get('callsign'));
-			var pLatLng = self.markers[rec.get('callsign')].getPosition()
-			self.Map.panTo(pLatLng);
+			if(rec){
+				var pLatLng = self.markers[rec.get('callsign')].getPosition()
+				self.Map.panTo(pLatLng);
+			}
 		}
 
 		//* Update count labels

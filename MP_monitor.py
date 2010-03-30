@@ -228,7 +228,7 @@ class MP_MonitorBot(QtCore.QObject):
 					#if do_update == True:
 					if not self.pilotsHistory.has_key(callsign):
 						self.pilotsHistory[callsign] =  {'alt': pilot['alt'], 'alt_trend': 'level'}
-						print "new"
+						#print "new"
 						#self.pilotsHistory[callsign]['alt_trend'] = 'level'
 					else:
 						if do_calc_update == True:
@@ -245,7 +245,7 @@ class MP_MonitorBot(QtCore.QObject):
 								alt_trend = 'level'
 							pilot['alt_trend'] = alt_trend
 							#print "do update", alt_diff, print "do update", alt_diff
-							print alt_diff, self.pilotsHistory[callsign]['alt_trend'], pilot['alt_trend']
+							#print alt_diff, self.pilotsHistory[callsign]['alt_trend'], pilot['alt_trend']
 							self.pilotsHistory[callsign] = {'alt': pilot['alt'], 'alt_trend': alt_trend}
 							
 						else:

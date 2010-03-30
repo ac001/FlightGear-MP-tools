@@ -419,7 +419,7 @@ this.create_socket = function (){
 						//** Update Icon Marker
 						var latlng = new google.maps.LatLng(pilot.lat, pilot.lng);
 						self.markers[callsign].setPosition(latlng); 
-						//self.markers[callsign].setIcon(self.altitude_image(pilot.alt_trend, callsign == selected_callsign)); 		
+						self.markers[callsign].setIcon( self.altitude_image(pilot.alt_trend, rec.get('check') == 1) ); 		
 
 						//** Update callsign overlay
 						self.callsignOverlays[callsign].setPosition(latlng);

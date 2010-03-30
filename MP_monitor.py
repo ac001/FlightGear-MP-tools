@@ -162,9 +162,9 @@ class MP_MonitorBot(QtCore.QObject):
 		#return
 		#print self.host2ip	
 		#return
-		if not self.host2ip.has_key("mpserver02.flightgear.org"):
+		if not self.host2ip.has_key("mpserver03.flightgear.org"):
 			return
-		host_address = self.host2ip["mpserver02.flightgear.org"]
+		host_address = self.host2ip["mpserver03.flightgear.org"]
 		#print "host_address=", host_address
 		#for ip in self.ip2host:
 		#host_address = self.ip2host[ip]
@@ -205,7 +205,7 @@ class MP_MonitorBot(QtCore.QObject):
 		if (epoch - self.last_calc) > mp_config.CALC_UPDATE_INTERNAL:
 			self.last_calc = epoch
 			do_calc_update = True
-
+			print "update cycle"
 		lines = self.telnetString[host_address].split("\n")
 		pilots = {}
 		for line in lines:
@@ -245,65 +245,23 @@ class MP_MonitorBot(QtCore.QObject):
 					else:
 						## Update cycle so calc altitude trend, heading and airspeed
 						if do_calc_update == True:
+							##print "up"
 							prev_pilot = self.pilotsHistory[callsign]
 
 							## Altitude trend
 							alt_diff =  int(pilot['alt']) - int(prev_pilot['alt'])
-							if alt_diff > 50:
+							if alt_diff > mp_config.ALT_DIFF_THRESHOLD:
 								alt_trend = 'climb'
-							elif alt_diff < -50:
+							elif alt_diff < - mp_config.ALT_DIFF_THRESHOLD:
 								alt_trend = 'descend'
 							else:
 								alt_trend = 'level'
 							pilot['alt_trend'] = alt_trend
 	
 							## Heading
-							"""
-							if(1 == 0):
-								lat1 =  (pi/180) * prev_pilot['lat'] ## (pi/180) *
-								lon1 =  (pi/180) * (prev_pilot['lng'] * -1)
-								lat2 =  (pi/180) * lat
-								lon2 =  (pi/180) * (lng * -1)
-							else:
-
-								## with inout of
-								lat1 =  prev_pilot['lat'] 
-								lon1 =  prev_pilot['lng'] 
-								lat2 =  lat
-								lon2 =  lng 
-							"""
-							
-							#try:
 							dist = None
 							hdg = self.heading(prev_pilot['lat'], lat, prev_pilot['lng'], lng)
 							pilot['hdg'] = hdg
-							#except:
-							#	dist = 'D.err'
-							#	## ERROR when postions are the same
-							#	print "Distance Error", callsign, lat1, lat2, lon1, lon2
-							#pilot['dist'] = dist
-							#d = 2 * asin( sqrt( pow( sin((lat1-lat2) / 2) ),2) +  cos(lat1) * cos(lat2) * pow( sin((lon1-lon2)/2) ),2)))
-							#print d
-							#hdg = None
-							#if dist:
-							#	try:
-							#		if sin(lon2-lon1) < 0:       
-							#			hdg = acos((sin(lat2)-sin(lat1)*cos(dist))/(sin(dist)*cos(lat1)))    
-							#		else:       
-							#			hdg = 2 * pi - acos((sin(lat2)-sin(lat1)*cos(dist))/(sin(dist)*cos(lat1)))    
-							#		#print d, tc1
-							#		pilot['hdg'] = hdg
-							#	except:
-							#		pilot['hdg'] = 'h.err'
-							#else:
-							#	pilot['hdg'] = 'no dist'
-
-							#hdg = atan2(lat1-lat2, lon1-lon2)
-							#tc1=mod( 	atan2( sin(lon1-lon2)   * cos(lat2),
-							#         	cos(lat1)  *sin(lat2) - sin(lat1)*cos(lat2)*cos(lon1-lon2)), 2*pi)
-							##tc = mod( 	atan2( sin(lon1 - lon2) * cos(lat2),
-							##			cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(lon1-lon2)), 2 * pi)
-							##print tc
 							self.pilotsHistory[callsign] = {'alt': pilot['alt'], 'alt_trend': alt_trend, 
 															'lat': lat, 'lng': lng, 
 															'hdg': hdg, 'dist': dist}

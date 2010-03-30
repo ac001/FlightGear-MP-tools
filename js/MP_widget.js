@@ -33,6 +33,9 @@ CallsignOverlay.prototype.draw = function() {
 }
 CallsignOverlay.prototype.setPosition = function(latlng) {
 	var point =  this.getProjection().fromLatLngToDivPixel(latlng);
+	if(!this.div_){
+		return; //??? maybe destroyed ??
+	}
 	this.div_.style.left = point.x + 'px';
 	this.div_.style.top = point.y + 'px';
 }
@@ -448,7 +451,7 @@ this.create_socket = function (){
 							path.pop() //(9);
 						}
 						if(latlng.lat() == 0 && latlng.lng() == 0){
-							console.log("dropped", latlng);
+							////console.log("dropped", latlng);
 						}else{
 							path.insertAt(0, latlng);
 						}
@@ -460,7 +463,7 @@ this.create_socket = function (){
 						if(f < -10){
 							
 							var callsign = rec.get('callsign');
-							console.log('NUKED', callsign)
+							//console.log('NUKED', callsign)
 							//* remove store
 							self.pilotsStore.removeAt( self.pilotsStore.indexOfId(callsign));
 							//* remove markers

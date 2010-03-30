@@ -14,6 +14,7 @@ DNS_INTERVAL = 500
 ## Time between updates of position, trends
 CALC_UPDATE_INTERNAL = 5
 
+ALT_DIFF_THRESHOLD = 75 ## only changes more (interval above) will show climb or descend
 
 #LOCAL = fileInfo.exists()
 fileInfo = QtCore.QFileInfo('./LOCAL.txt')

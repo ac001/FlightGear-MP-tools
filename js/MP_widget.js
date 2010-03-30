@@ -25,20 +25,21 @@ CallsignOverlay.prototype.onAdd = function() {
 	var panes = this.getPanes();
 	panes.overlayLayer.appendChild(div);
 }
-
 CallsignOverlay.prototype.draw = function() {
 	var point = this.getProjection().fromLatLngToDivPixel(this.latlng_);
 	var div = this.div_;
 	div.style.left = point.x + 'px';
 	div.style.top = point.y + 'px';
 }
-
 CallsignOverlay.prototype.setPosition = function(latlng) {
 	var point =  this.getProjection().fromLatLngToDivPixel(latlng);
 	this.div_.style.left = point.x + 'px';
 	this.div_.style.top = point.y + 'px';
 }
-
+CallsignOverlay.prototype.onRemove = function() {
+  this.div_.parentNode.removeChild(this.div_);
+  this.div_ = null;
+}
 //*******************************************************************************
 // Core Object
 //*******************************************************************************

@@ -424,6 +424,7 @@ this.create_socket = function (){
 						rec.set('alt', pilot.alt);
 						rec.set('alt_trend', pilot.alt_trend);		
 						rec.set('hdg', pilot.hdg);
+						rec.set('dist', pilot.dist);
 
 						//** Update Icon Marker
 						var latlng = new google.maps.LatLng(pilot.lat, pilot.lng);

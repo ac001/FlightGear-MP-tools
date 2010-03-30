@@ -3,6 +3,7 @@
 
 import sys
 import signal
+import time
 import simplejson as json
 from PyQt4 import QtCore
 from PyQt4 import QtNetwork
@@ -97,6 +98,8 @@ class MP_MonitorBot(QtCore.QObject):
 		self.host2ip = {}
 		self.ip2host = {}
 		
+		self.last_calc = time.time()
+		self.pilotsHistory = {}
 
 		self.timer = QtCore.QTimer(self)
 		self.connect(self.timer, QtCore.SIGNAL("timeout()"), self.on_timer)
@@ -114,19 +117,19 @@ class MP_MonitorBot(QtCore.QObject):
 		self.lastUpdate = None
 
 		self.server = QtNetwork.QTcpServer(self)
-		self.connect(self.server, QtCore.SIGNAL("newConnection()"), self.on_server_connection)
+		self.connect(self.server, QtCore.SIGNAL("newConnection()"), self.on_websocket_connection)
 		self.server.listen(QtNetwork.QHostAddress(QtNetwork.QHostAddress.Any), 5050)
 		self.clientSockets = {}
 		self.increment = 0
 
-	def on_server_connection(self):
+	def on_websocket_connection(self):
 		
 		socket = self.server.nextPendingConnection()
 		remote_host = str(socket.peerAddress().toString())
 		#print "addr=", remote_host # socket.peerAddress().toString()
 		if not self.clientSockets.has_key(remote_host):
 			self.clientSockets[remote_host] = socket
-			self.connect(self.clientSockets[remote_host], QtCore.SIGNAL("disconnected()"), lambda argg=remote_host: self.on_socket_delete_later(argg))
+			self.connect(self.clientSockets[remote_host], QtCore.SIGNAL("disconnected()"), lambda argg=remote_host: self.on_websocket_delete_later(argg))
 			#print "-------------------------------------\nconnection", socket, socket.state()
 			foo_str = "{handshake: 'ok'}"; "%s" % QtCore.QTime.currentTime()
 			os = QtCore.QByteArray()
@@ -141,8 +144,8 @@ class MP_MonitorBot(QtCore.QObject):
 			socket.write(os)
 		print "Connection >>", (", ").join(self.clientSockets.keys())
 
-	def on_socket_delete_later(self, remote_address):
-		##print "delete later", remote_address
+	## Nuke Socket
+	def on_websocket_delete_later(self, remote_address):
 		self.clientSockets[remote_address].disconnectFromHost()
 		del self.clientSockets[remote_address]
 		print "Dropped a connection, remaining = ", (", ").join(self.clientSockets.keys())
@@ -165,9 +168,9 @@ class MP_MonitorBot(QtCore.QObject):
 		if not self.telnetSocket.has_key(host_address):
 			self.telnetSocket[host_address] = QtNetwork.QTcpSocket(self)
 			#print "create sock"
-			self.connect(self.telnetSocket[host_address], QtCore.SIGNAL("connected()"), lambda argg=host_address: self.on_socket_connected(argg))
-			self.connect(self.telnetSocket[host_address], QtCore.SIGNAL("disconnected()"), lambda argg=host_address: self.on_socket_disconnected(argg))
-			self.connect(self.telnetSocket[host_address], QtCore.SIGNAL("readyRead()"), lambda argg=host_address: self.on_socket_ready_read(argg))
+			self.connect(self.telnetSocket[host_address], QtCore.SIGNAL("connected()"), lambda argg=host_address: self.on_telnet_connected(argg))
+			self.connect(self.telnetSocket[host_address], QtCore.SIGNAL("disconnected()"), lambda argg=host_address: self.on_telnet_disconnected(argg))
+			self.connect(self.telnetSocket[host_address], QtCore.SIGNAL("readyRead()"), lambda argg=host_address: self.on_telnet_ready_read(argg))
 			#self.connect(self.telnetSocket, QtCore.SIGNAL("finished()"), self.on_socket_finished)
 		if self.telnetSocket[host_address].state() == QtNetwork.QAbstractSocket.UnconnectedState:
 			#print "connect,", host_address, "=", self.telnetSocket[host_address].state()
@@ -178,55 +181,76 @@ class MP_MonitorBot(QtCore.QObject):
 			#print "working", host_address
 			pass
 
-	#def on_socket_connected(self):
-		#print "on_socket_connected"
-		#pass
-	def on_socket_connected(self, host_address):
+
+	def on_telnet_connected(self, host_address):
 		#print "con", host_address, self.telnetTimer[host_address].msecsTo( QtCore.QTime.currentTime() )
 		pass
 
-	def on_socket_ready_read(self, host_address):
+	## Data to read, so append the telnetString
+	def on_telnet_ready_read(self, host_address):
 		self.telnetString[host_address] = self.telnetString[host_address] + str(self.telnetSocket[host_address].readAll())
 
-	def on_socket_disconnected(self, host_address):
-		#print "\t>> done", host_address, self.telnetTimer[host_address].msecsTo( QtCore.QTime.currentTime() ),  len(self.telnetString[host_address])
+	def on_telnet_disconnected(self, host_address):
+		#print "\t>> Recieved", host_address, self.telnetTimer[host_address].msecsTo( QtCore.QTime.currentTime() ),  len(self.telnetString[host_address])
 		#print self.telnetString[host_address]
-		if len(self.telnetString[host_address]) == 0:
+		if len(self.telnetString[host_address]) == 0: ## Nothing there - happens sometimes
 			return
+
+		do_calc_update = False
+		epoch = time.time()
+		if epoch - self.last_calc > 5:
+			print "DO CALC", epoch, epoch - self.last_calc
+			self.last_calc = epoch
+			do_calc_update = True
+
 		lines = self.telnetString[host_address].split("\n")
 		pilots = {}
 		for line in lines:
 			if line.startswith("#") or line == "":
-				## reserved bits
+				## TODO parse server details
 				pass
 			else:
 				parts =  line.split(" ")
-				#print parts
-				#sc3@LOCAL: -4854301.177206 4143809.601100 94760.548555 
-				#  0            1              2            3          
-				# 0.856340 139.514712 16404.199475
-				#   4       5          6
-				## xx,  -0.713956 1.824345 Aircraft/c172p/Models/c172p.xml
-				#  7          8         9         10
-				#return
 				## ta xiii
-				#Origin, LastPos[X], LastPos[Y], LastPos[Z], 
+				# Origin, LastPos[X], LastPos[Y], LastPos[Z],
 				# PlayerPosGeod[Lat], PlayerPosGeod[Lon], PlayerPosGeod[Alt],
-				#LastOrientation[X], LastOrientation[Y], LastOrientation[Z], ModelName
+				# LastOrientation[X], LastOrientation[Y], LastOrientation[Z], ModelName
+
 				callsign = parts[0].split("@")[0].strip()
-				#print callsign_raw
 				if callsign != '':
-					## Clean up unicode, not dure what this ia about but caused json to die
-					##callsign = self.clean_callsign(callsign_raw)
-					#print   callsign_raw + "=" + callsign
 					pilot = {}
-					
-					pilot['callsign'] = callsign
 					pilot['ident'] = parts[0]
 					pilot['lat'] = parts[4]
 					pilot['lng'] = parts[5]
 					pilot['alt'] = parts[6].split(".")[0] if parts[6].find('.') > 0 else parts[6]
-					pilot['model'] = parts[10].split("/")[-1].replace('.xml', '')
+					pilot['aircraft'] = parts[10].split("/")[-1].replace('.xml', '')
+
+					#if do_update == True:
+					if not self.pilotsHistory.has_key(callsign):
+						self.pilotsHistory[callsign] =  {'alt': pilot['alt'], 'alt_trend': 'level'}
+						print "new"
+						#self.pilotsHistory[callsign]['alt_trend'] = 'level'
+					else:
+						if do_calc_update == True:
+							
+							#if self.pilotsHistory.has_key(callsign):
+							prev_pilot = self.pilotsHistory[callsign]
+							alt_diff =  int(pilot['alt']) - int(prev_pilot['alt'])
+							
+							if alt_diff > 50:
+								alt_trend = 'climb'
+							elif alt_diff < -50:
+								alt_trend = 'descend'
+							else:
+								alt_trend = 'level'
+							pilot['alt_trend'] = alt_trend
+							#print "do update", alt_diff, print "do update", alt_diff
+							print alt_diff, self.pilotsHistory[callsign]['alt_trend'], pilot['alt_trend']
+							self.pilotsHistory[callsign] = {'alt': pilot['alt'], 'alt_trend': alt_trend}
+							
+						else:
+							pilot['alt_trend'] = self.pilotsHistory[callsign]['alt_trend']
+							#print "=", pilot['alt_trend']
 					pilots[callsign] = pilot
 					#print pilot
 	

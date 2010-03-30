@@ -62,8 +62,8 @@ this.icons.blip_red 		= 'images/red_dot.png';
 this.icons.blip_yellow 		= 'images/yellow_dot.png';
 
 this.icons.level_blue		= 'images/level_blue.png';
-this.icons.up_blue			= 'images/up_blue.png';
-this.icons.down_blue		= 'images/down_blue.png';
+this.icons.climb_blue			= 'images/up_blue.png';
+this.icons.descend_blue		= 'images/down_blue.png';
 
 
 this.map_initialize =  function () {
@@ -100,7 +100,22 @@ this.render_callsign = function (v, meta, rec){
 	return v;
 }
 
+//*****************************************
+//** Altirude Related
+//*****************************************
 this.render_altitude = function (v, meta, rec, rowIdx, colIdx, store){
+	return "<span style='color:" + self.altitude_color(v) + ";'>" + Ext.util.Format.number(v, '0,000'); + '</span>';
+}
+this.render_altitude_trend = function (v, meta, rec, rowIdx, colIdx, store){
+	return "<img src='" + self.altitude_image(v) + "'>";
+}
+this.altitude_image = function(alt_trend){
+	if(alt_trend == 'level'){
+		return self.icons.level_blue;
+	}
+	return alt_trend == 'climb' ? self.icons.climb_blue : self.icons.descend_blue;
+}
+this.altitude_color = function(v){
 	if(v < 1000){
 		color = '#931429';
 	}else if(v < 2000){
@@ -120,7 +135,8 @@ this.render_altitude = function (v, meta, rec, rowIdx, colIdx, store){
 	}else{
 		color = '#331CDC';
 	}
-	return "<span style='color:" + color + ";'>" + Ext.util.Format.number(v, '0,000'); + '</span>';
+	return color;
+
 }
 
 this.statusLabel = new Ext.Toolbar.TextItem({text:'Socket Status'});
@@ -144,8 +160,7 @@ var PilotRecord = Ext.data.Record.create([
 	{name: "lat", type: 'float'},
 	{name: "lng", type: 'float'},
 	{name: "alt", type: 'int'},
-	{name: "altp", type: 'int'},
-	{name: "altd", type: 'string'},
+	{name: "alt_trend", type: 'string'},
 	{name: "heading", type: 'string'},
 	{name: "pheading", type: 'string'},
 	{name: "pitch", type: 'string'},
@@ -165,14 +180,13 @@ this.pilotsStore = new Ext.data.Store({
 				{name: "lat", type: 'float'},
 				{name: "lng", type: 'float'},
 				{name: "alt", type: 'int'},
-				{name: "altp", type: 'int'},
-				{name: "altd", type: 'string'},
+				{name: "alt_trend", type: 'string'},
 				{name: "heading", type: 'string'},
 				{name: "pheading", type: 'string'},
 				{name: "pitch", type: 'string'},
 				{name: "roll", type: 'string'}
-	]
-	//, sortInfo: {field: "callsign", direction: 'ASC'}
+	],
+	sortInfo: {field: "callsign", direction: 'ASC'}
 });
 
 
@@ -202,6 +216,9 @@ this.pilotsLookupGrid = new Ext.grid.GridPanel({
 				{header: 'Aircraft',  dataIndex:'model', sortable: true, hidden: true},
 				{header: 'Alt', dataIndex:'alt', sortable: true, align: 'right',
 					renderer: this.render_altitude
+				},
+				{header: '', dataIndex:'alt_trend', sortable: true, align: 'center', width: 20,
+					renderer: this.render_altitude_trend
 				},
 				{header: 'Lat', dataIndex:'lat', sortable: true, align: 'right',
 					renderer: function(v, meta, rec, rowIdx, colIdx, store){
@@ -372,32 +389,26 @@ this.create_socket = function (){
 				//var rec = pilotsStore.getAt(idx);
 				if(rec){
 					//#console.log( rec.id);
-
-					if( pilots[rec.id] ){
-
+					var callsign = rec.get('callsign');
+					if( pilots[callsign] ){
+						//console.log(callsign);
+						
 						//* Pilot exists so update
-						var r = pilots[rec.id]
-
-						if(altitude_update){
-							var icon = self.icons.level_blue;
-							var alt_diff = r.alt - rec.get('altp');
-							if(Math.abs(alt_diff) > 100){ //* only interested if its changed 100ft or more
-								rec.set('altp', r.alt);
-								icon = alt_diff > 0 ? self.icons.up_blue : self.icons.down_blue;
-								//rec.set('altd', icon);
-							}
-							self.markers[r.callsign].setIcon(icon); 
-						}
-						//rec.set('altd', alt_diff);
+						var pilot = pilots[callsign]
 						rec.set('flag', 0);
-						rec.set('lat', r.lat);
-						rec.set('lng', r.lng);
-						rec.set('alt', r.alt);
+						rec.set('lat', pilot.lat);
+						rec.set('lng', pilot.lng);
+						rec.set('alt', pilot.alt);
+						rec.set('alt_trend', pilot.alt_trend);		
+
+						//** Update callsign overlay
+						self.markers[callsign].setIcon(self.altitude_image(pilot.alt_trend)); 
 	
-						var latlng = new google.maps.LatLng(r.lat, r.lng);
-						//** Update marker
-						self.markers[r.callsign].setPosition(latlng); 
-						self.callsignOverlays[r.callsign].setPosition(latlng);
+						//** Update Icon Marker
+						var latlng = new google.maps.LatLng(pilot.lat, pilot.lng);
+
+						self.markers[callsign].setPosition(latlng); 
+						self.callsignOverlays[callsign].setPosition(latlng);
 					
 						//rec.set('alt', pilots[rec.id].alt);
 						//rec.set('heading', pilots[rec.id].heading);
@@ -412,22 +423,13 @@ this.create_socket = function (){
 						*/
 						
 	
-						var path = self.polyLines[r.callsign].getPath();
+						var path = self.polyLines[callsign].getPath();
 						if(path.getLength() == 50){
 							path.pop() //(9);
 						}
 						path.insertAt(0, latlng);
-						//paths.insertAt(0, latlng);
-						/* 
-						var marker = new google.maps.Marker({
-													position: latlng, 
-													map: self.Map,
-													title: r.callsign,
-													icon: icons.red_blip
-						});
-						self.markers[r.callsign].unshift(marker);
-						*/
-						delete pilots[rec.id]
+
+						delete pilots[callsign]
 					}else{
 						var f = rec.get('flag');
 						if(f > 0){
@@ -446,55 +448,40 @@ this.create_socket = function (){
 			}, self);
 		}
 		//* add new pilots_list
-		for(var p in pilots){
+		for(var callsign in pilots){
 			
-			//pilots[p].flag = 1;
+			var pilot = pilots[callsign];
 
 			//** create new record
-			var pRec = new PilotRecord(pilots[p], p);
-			pRec.set('altp', pilots[p].alt);
-			pRec.set('flag', 1);
+			var pRec = new PilotRecord(pilot, callsign);
+			pRec.set('callsign', callsign);
+			pRec.set('flag', 0);
 			self.pilotsStore.add(pRec);
 
-			//** Add New Marker
-			var latlng = new google.maps.LatLng(pilots[p].lat, pilots[p].lng);
-			self.markers[pilots[p].callsign] = new google.maps.Marker({
+			//** Create New Marker and callsign overlay
+			var latlng = new google.maps.LatLng(pilot.lat, pilot.lng);
+			self.markers[callsign] = new google.maps.Marker({
 									position: latlng, 
 									map: self.Map,
-									title: pilots[p].callsign,
+									title: callsign,
 									icon: self.icons.level_blue
 			});
 
-			self.callsignOverlays[pilots[p].callsign] = new CallsignOverlay(pilots[p].callsign, latlng, self.Map);
+			//** Create callsign overlay
+			self.callsignOverlays[callsign] = new CallsignOverlay(callsign, latlng, self.Map);
 	
-
 			//** Create the PolyLines and Coordinates object
-			self.polyCoordinates[pilots[p].callsign] = new google.maps.MVCArray();
+			self.polyCoordinates[callsign] = new google.maps.MVCArray();
 			var polyOptions = {
-				path: self.polyCoordinates[pilots[p].callsign],
+				path: self.polyCoordinates[callsign],
 				strokeColor: 'blue',
 				strokeOpacity: 1.0,
 				strokeWeight: 1
 			}
-			self.polyLines[pilots[p].callsign] = new google.maps.Polyline(polyOptions);
-			self.polyLines[pilots[p].callsign].setMap(self.Map);
+			self.polyLines[callsign] = new google.maps.Polyline(polyOptions);
+			self.polyLines[callsign].setMap(self.Map);
 
-			//var foo = new google.maps.
-			//console.log(self.Map)
-			//var points = self.myOverlay.getProjection().fromLatLngToDivPixel(latlng);
-			//console.log(points);
-			//var div = document.createElement("div");
-			//div.appendChild(document.createTextNode("@@@@")) //pilots[p].callsign));
-			//document.getElementById("map_canvas").appendChild(div);
-			//document.body.appendChild(div);
-			//div.style.position = "absolute";
-			//div.style.top = 600;
-			//div.style.left = 600;
-
-
-			//#//var path = 
-
-			delete pilots[p]
+			delete pilots[callsign]
 		}
 
 		if(self.chkTrackSelectedRow.getValue()){

@@ -4,6 +4,7 @@
 import sys
 import signal
 import time
+from math import *
 import simplejson as json
 from PyQt4 import QtCore
 from PyQt4 import QtNetwork
@@ -161,7 +162,7 @@ class MP_MonitorBot(QtCore.QObject):
 		#print self.host2ip	
 		#return
 		host_address = self.host2ip["mpserver02.flightgear.org"]
-		print "host_address=", host_address
+		#print "host_address=", host_address
 		#for ip in self.ip2host:
 		#host_address = self.ip2host[ip]
 		if not self.telnetSocket.has_key(host_address):
@@ -225,26 +226,26 @@ class MP_MonitorBot(QtCore.QObject):
 						pilot_ip = host_address
 					pilot['server'] = self.ip2host[pilot_ip].split('.')[0] if self.ip2host.has_key(pilot_ip) else pilot_ip
 
-					pilot['ident'] = parts[0]
-					pilot['lat'] = parts[4]
-					pilot['lng'] = parts[5]
+					#pilot['ident'] = parts[0]
+					lat = float(parts[4])
+					pilot['lat'] = lat
+					lng = float(parts[5])
+					pilot['lng'] = lng
 					pilot['alt'] = parts[6].split(".")[0] if parts[6].find('.') > 0 else parts[6]
 					pilot['aircraft'] = parts[10].split("/")[-1].replace('.xml', '')
 
-
-
-					#if do_update == True:
+					## Pilot not in history so add
 					if not self.pilotsHistory.has_key(callsign):
-						self.pilotsHistory[callsign] =  {'alt': pilot['alt'], 'alt_trend': 'level'}
-						#print "new"
-						#self.pilotsHistory[callsign]['alt_trend'] = 'level'
+						self.pilotsHistory[callsign] =  {'alt': pilot['alt'], 'alt_trend': 'level', 'lat': lat, 'lng': lng, 'hdg': None, 'dist': None}
+
+					## Pilot has history
 					else:
+						## Update cycle so calc altitude trend, heading and airspeed
 						if do_calc_update == True:
-							
-							#if self.pilotsHistory.has_key(callsign):
 							prev_pilot = self.pilotsHistory[callsign]
+
+							## Altitude trend
 							alt_diff =  int(pilot['alt']) - int(prev_pilot['alt'])
-							
 							if alt_diff > 50:
 								alt_trend = 'climb'
 							elif alt_diff < -50:
@@ -252,12 +253,50 @@ class MP_MonitorBot(QtCore.QObject):
 							else:
 								alt_trend = 'level'
 							pilot['alt_trend'] = alt_trend
-							#print "do update", alt_diff, print "do update", alt_diff
-							#print alt_diff, self.pilotsHistory[callsign]['alt_trend'], pilot['alt_trend']
-							self.pilotsHistory[callsign] = {'alt': pilot['alt'], 'alt_trend': alt_trend}
+	
+							## Heading
+							lat1 = prev_pilot['lat']
+							lon1 = prev_pilot['lng']
+							lat2 = lat
+							lon2 = lng
+							
+							try:
+								dist = acos( sin(lat1) * sin(lat2) + cos(lat1) * cos(lat2) * cos(lon1-lon2))
+							except:
+								dist = 'D.err'
+								## ERROR when postions are the same
+								print "Distance Error", lat1, lat2, lon1, lon2
+							pilot['dist'] = dist
+							#d = 2 * asin( sqrt( pow( sin((lat1-lat2) / 2) ),2) +  cos(lat1) * cos(lat2) * pow( sin((lon1-lon2)/2) ),2)))
+							#print d
+							hdg = None
+							if dist:
+								try:
+									if sin(lon2-lon1) < 0:       
+										hdg = acos((sin(lat2)-sin(lat1)*cos(dist))/(sin(dist)*cos(lat1)))    
+									else:       
+										hdg = 2 * pi - acos((sin(lat2)-sin(lat1)*cos(dist))/(sin(dist)*cos(lat1)))    
+									#print d, tc1
+									pilot['hdg'] = hdg
+								except:
+									pilot['hdg'] = 'h.err'
+							else:
+								pilot['hdg'] = 'no dist'
+
+							#hdg = atan2(lat1-lat2, lon1-lon2)
+							#tc1=mod( 	atan2( sin(lon1-lon2)   * cos(lat2),
+							#         	cos(lat1)  *sin(lat2) - sin(lat1)*cos(lat2)*cos(lon1-lon2)), 2*pi)
+							##tc = mod( 	atan2( sin(lon1 - lon2) * cos(lat2),
+							##			cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(lon1-lon2)), 2 * pi)
+							##print tc
+							self.pilotsHistory[callsign] = {'alt': pilot['alt'], 'alt_trend': alt_trend, 
+															'lat': lat, 'lng': lng, 
+															'hdg': hdg, 'dist': dist}
 							
 						else:
 							pilot['alt_trend'] = self.pilotsHistory[callsign]['alt_trend']
+							pilot['hdg'] = self.pilotsHistory[callsign]['hdg']
+							pilot['dist'] = self.pilotsHistory[callsign]['dist']
 							#print "=", pilot['alt_trend']
 					pilots[callsign] = pilot
 					#print pilot

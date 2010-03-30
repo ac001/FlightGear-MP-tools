@@ -12,7 +12,7 @@ UPDATE_DNS = "%s/update/dns/" % MASTER_MACHINE
 DNS_INTERVAL = 500
 
 ## Time between updates of position, trends
-CALC_UPDATE_INTERNAL = 5
+CALC_UPDATE_INTERNAL = 3
 
 
 #LOCAL = fileInfo.exists()

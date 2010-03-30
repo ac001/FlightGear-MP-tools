@@ -170,7 +170,8 @@ var PilotRecord = Ext.data.Record.create([
 	{name: "lng", type: 'float'},
 	{name: "alt", type: 'int'},
 	{name: "alt_trend", type: 'string'},
-	{name: "heading", type: 'string'}
+	{name: "hdg", type: 'string'},
+	{name: "dist", type: 'string'}
 ]);
 
 //* Pilots Datastore
@@ -185,7 +186,8 @@ this.pilotsStore = new Ext.data.Store({
 				{name: "lng", type: 'float'},
 				{name: "alt", type: 'int'},
 				{name: "alt_trend", type: 'string'},
-				{name: "heading", type: 'string'}
+				{name: "hdg", type: 'string'},
+				{name: "dist", type: 'string'}
 	],
 	remoteSort: false,
 	sortInfo: {field: "callsign", direction: 'ASC'}
@@ -245,7 +247,8 @@ this.pilotsLookupGrid = new Ext.grid.GridPanel({
 						return Ext.util.Format.number(v, '0.000');
 					}
 				}, */
-				{header: 'Aircraft', dataIndex:'aircraft', sortable: true, align: 'left'}
+				{header: 'Dist', dataIndex:'dist', sortable: true, align: 'left'},
+				{header: 'Hdg', dataIndex:'hdg', sortable: true, align: 'left'}
 	],
 	listeners: {},
 	bbar: [this.pilotsSummaryCountLabel, '->',  this.statusLabel]
@@ -276,9 +279,14 @@ this.pilotsMainGrid = new Ext.grid.GridPanel({
 			renderer: this.render_altitude
 		},
 		{header: '', dataIndex:'alt_trend', sortable: true, align: 'center', width: 20,	renderer: this.render_altitude_trend},
-		{header: 'Heading', dataIndex:'heading', sortable: true, align: 'right',
+		{header: 'Heading', dataIndex:'hdg', sortable: true, align: 'right',
 			renderer: function(v, meta, rec, rowIdx, colIdx, store){
-				return Ext.util.Format.number(v, '0');
+				return v; //Ext.util.Format.number(v, '0');
+			}
+		},
+		{header: 'Dist', dataIndex:'dist', sortable: true, align: 'right',
+			renderer: function(v, meta, rec, rowIdx, colIdx, store){
+				return v; //Ext.util.Format.number(v, '0');
 			}
 		},
 		{header: 'Airspeed', dataIndex:'airspeed', sortable: true, align: 'right',
@@ -415,6 +423,7 @@ this.create_socket = function (){
 						rec.set('lng', pilot.lng);
 						rec.set('alt', pilot.alt);
 						rec.set('alt_trend', pilot.alt_trend);		
+						rec.set('hdg', pilot.hdg);
 
 						//** Update Icon Marker
 						var latlng = new google.maps.LatLng(pilot.lat, pilot.lng);

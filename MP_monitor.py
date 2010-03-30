@@ -255,7 +255,7 @@ class MP_MonitorBot(QtCore.QObject):
 							pilot['alt_trend'] = alt_trend
 	
 							## Heading
-							if(1 == 0):
+							if(1 == 1):
 								lat1 =  (pi/180) * prev_pilot['lat'] ## (pi/180) *
 								lon1 =  (pi/180) * prev_pilot['lng']
 								lat2 =  (pi/180) * lat

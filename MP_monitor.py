@@ -145,7 +145,7 @@ class MP_MonitorBot(QtCore.QObject):
 		##print "delete later", remote_address
 		self.clientSockets[remote_address].disconnectFromHost()
 		del self.clientSockets[remote_address]
-		print "Dropped >>", (", ").join(self.clientSockets.keys())
+		print "Dropped a connection, remaining = ", (", ").join(self.clientSockets.keys())
 
 	def on_timer(self):
 		self.increment += 1
@@ -236,7 +236,7 @@ class MP_MonitorBot(QtCore.QObject):
 
 		#print "\t>>", "p=", len(pilots),  "ms=", self.telnetTimer[host_address].msecsTo( QtCore.QTime.currentTime() ), "\thost=", host_address
 		#return
-		json_str = json.dumps({'pilots': pilots}, ensure_ascii=False)
+		json_str = json.dumps({'success': True, 'pilots': pilots}, ensure_ascii=False)
 		ba = QtCore.QByteArray('\x00' + json_str + '\xff')
 		if len(self.clientSockets) > 0:
 			for idx in self.clientSockets:
@@ -278,18 +278,6 @@ class MP_MonitorBot(QtCore.QObject):
 		#print "send_to_master", host_name, ip_address
 		pass
 
-
-	def clean_callsign(self, callsign_raw):
-		callsign = ''
-		for idx in range(0, len(callsign_raw)):
-			character = callsign_raw[idx]
-			c = ord(character)
-			if c == 45: ## allow "-"
-				callsign += character
-			if c > 48 and c < 90: # allow 0-9, a-z A-Z
-				callsign += character
-
-		return callsign
 
 
 ##################

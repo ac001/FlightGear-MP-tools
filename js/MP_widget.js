@@ -61,7 +61,7 @@ this.icons = {};
 this.icons.blip_red 		= 'images/red_dot.png';
 this.icons.blip_yellow 		= 'images/yellow_dot.png';
 
-this.icons.level_blue			= 'images/level_blue.png';
+this.icons.level_blue		= 'images/level_blue.png';
 this.icons.up_blue			= 'images/up_blue.png';
 this.icons.down_blue		= 'images/down_blue.png';
 
@@ -101,7 +101,6 @@ this.render_callsign = function (v, meta, rec){
 }
 
 this.render_altitude = function (v, meta, rec, rowIdx, colIdx, store){
-	return v;
 	if(v < 1000){
 		color = '#931429';
 	}else if(v < 2000){
@@ -121,14 +120,14 @@ this.render_altitude = function (v, meta, rec, rowIdx, colIdx, store){
 	}else{
 		color = '#331CDC';
 	}
-	return "<span style='color:" + color + ';">' + Ext.util.Format.number(v, '0,000'); + '</span>';
+	return "<span style='color:" + color + ";'>" + Ext.util.Format.number(v, '0,000'); + '</span>';
 }
 
 this.statusLabel = new Ext.Toolbar.TextItem({text:'Socket Status'});
 
 this.chkTrackSelectedRow = new Ext.form.Checkbox({
 	boxLabel: 'Track Selected Row',
-	checked: true
+	checked: false
 });
 //****************************************************************
 this.latLabel = new Ext.Toolbar.TextItem({text:'Lat: -0.00'});
@@ -176,24 +175,20 @@ this.pilotsStore = new Ext.data.Store({
 	//, sortInfo: {field: "callsign", direction: 'ASC'}
 });
 
-//this.pilotsStore.on("exception", function(prx, typ, act){
-//	//TODO
-//	console.log("exception", prx, typ, act);
-///});
 
+//************************************************
+//** Pilots Lookup SideBar Grid
+//************************************************
 this.pilotsLookupGrid = new Ext.grid.GridPanel({
 	title: 'Pilots',
 	iconCls: 'iconPilots',
 	autoScroll: true,
 	autoWidth: true,
-	tbar:[  //this.actionAdd, this.actionEdit, this.actionDelete, 
-			//'-',// this.actionLabSelectToolbarButton,
-			this.chkTrackSelectedRow,
+	tbar:[ 	this.chkTrackSelectedRow,
 			'->',
-			//Geo2.widgets.goto_www('Online', 'View rates on website', '/rates.php'),
-			{text: 'Connect', iconCls: 'iconRefresh', handler: function(){
-				//pilotsStore.reload();
-				self.create_socket()
+			{text: 'Connect', iconCls: 'iconRefresh', 
+				handler: function(){
+					self.create_socket()
 				}
 			}    
 	],
@@ -206,21 +201,8 @@ this.pilotsLookupGrid = new Ext.grid.GridPanel({
 				{header: 'CallSign',  dataIndex:'callsign', sortable: true, renderer: this.render_callsign},
 				{header: 'Aircraft',  dataIndex:'model', sortable: true, hidden: true},
 				{header: 'Alt', dataIndex:'alt', sortable: true, align: 'right',
-					renderer: function(v, meta, rec, rowIdx, colIdx, store){
-						return v;
-					}
+					renderer: this.render_altitude
 				},
-				/*{header: 'PAlt', dataIndex:'altp', sortable: true, align: 'right',
-					renderer: function(v, meta, rec, rowIdx, colIdx, store){
-						return v;
-					}
-				},
-				{header: 'Altd', dataIndex:'altd', sortable: true, align: 'right',
-					renderer: function(v, meta, rec, rowIdx, colIdx, store){
-						return v;
-					}
-				}*/
-				/*, */
 				{header: 'Lat', dataIndex:'lat', sortable: true, align: 'right',
 					renderer: function(v, meta, rec, rowIdx, colIdx, store){
 						return Ext.util.Format.number(v, '0.000');
@@ -241,7 +223,9 @@ this.pilotsLookupGrid.on("rowdblclick", function(grid, idx, e){
 	self.Map.panTo(latlng);
 });    
 
-
+//************************************************
+//** Pilots Main Grid
+//************************************************
 this.pilotsMainGrid = new Ext.grid.GridPanel({
 	title: 'Pilots Data',
 	iconCls: 'iconPilots',
@@ -294,7 +278,10 @@ this.pilotsMainGrid = new Ext.grid.GridPanel({
 	listeners: {},
 	bbar: [this.pilotsDataCountLabel]
 });
-        
+
+//************************************************
+//** Main Viewport
+//************************************************
 this.viewport = new Ext.Viewport({
 	layout: 'border',
 	plain: true,
@@ -332,7 +319,9 @@ this.viewport = new Ext.Viewport({
 	]
 });
 
-
+//************************************************
+//** WebSocket
+//************************************************
 this.create_socket = function (){
 
 	var is_chrome = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
@@ -342,22 +331,21 @@ this.create_socket = function (){
 		return;
 	}
 
+	//*** Create Socket
 	self.webSocket = new WebSocket(WEB_SOCKET_ADDRESS);
 
+	//* On Open Socket
 	self.webSocket.onopen = function(msg) { 
-		//foo.value="connected"
-			//alert("connected");
-		self.statusLabel.setText("Connected")
-
+		self.statusLabel.setText("Connected");
 	}
 
+	//* On Close Socket
 	self.webSocket.onclose = function(msg) { 
-		//alert("closed");
-		//foo.value="closed"
-		self.statusLabel.setText("Closed")
-		setTimeout(self.create_socket, 3000)
+		self.statusLabel.setText("Closed");
+		setTimeout(self.create_socket, 3000); // reattempt login
 	}
 
+	//* On Message Resieved Socket
 	self.webSocket.onmessage = function(msg) { 
 		var json = Ext.decode(msg.data);
 		//#console.log("ok-pilots", json);

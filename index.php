@@ -42,12 +42,16 @@ var WEB_SOCKET_ADDRESS = "ws://<?php echo $domain; ?>:5050/";
 	font-family: sans-serif;
 	font-size: 7pt;
 	padding: 2px 5px;
-	
-	
 }
-.pilot_marker p{
-		
-}
+
+/* Bullshit way to clear the triangle as its dirty */
+.x-grid3-td-1 {background-image:none!important;}
+.x-grid3-td-2 {background-image:none!important;}
+.x-grid3-td-3 {background-image:none!important;}
+.x-grid3-td-4 {background-image:none!important;}
+.x-grid3-td-5 {background-image:none!important;}
+.x-grid3-td-6 {background-image:none!important;}
+.x-grid3-td-7 {background-image:none!important;}
 
 </style>
   

@@ -1,14 +1,76 @@
 //var FG = {};
 //FG.map = {};
 //FG.pilots_list = {};
-
+/*
 MyOverlay.prototype = new google.maps.OverlayView();
 MyOverlay.prototype.onAdd = function() { }
 MyOverlay.prototype.onRemove = function() { }
 MyOverlay.prototype.draw = function() { }
 function MyOverlay(map) { this.setMap(map); }
+*/
+function USGSOverlay(callsign, latlng, map) {
+	this.latlng_ = latlng;
+	this.callsign_ = callsign;
+	this.map_ = map;
+	this.div_ = null;
 
+	// Explicitly call setMap() on this overlay
+	this.setMap(map);
+}
 
+USGSOverlay.prototype = new google.maps.OverlayView();
+
+USGSOverlay.prototype.onAdd = function() {
+
+  // Note: an overlay's receipt of onAdd() indicates that
+  // the map's panes are now available for attaching
+  // the overlay to the map via the DOM.
+
+  // Create the DIV and set some basic attributes.
+  var div = document.createElement('DIV');
+  div.style.borderStyle = "none";
+  div.style.borderWidth = "0px";
+  div.style.position = "absolute";
+  div.style.backgroundColor = "black";
+
+  // Create an IMG element and attach it to the DIV.
+  var para = document.createElement("p");
+  para.style.color = "white";
+  //para.style.width = "100px";
+  //para.style.height = "20px";
+  div.appendChild(para);
+  var txt = document.createTextNode("FOOO");
+  para.appendChild(txt);
+
+  // Set the overlay's div_ property to this DIV
+  this.div_ = div;
+
+  // We add an overlay to a map via one of the map's panes.
+  // We'll add this overlay to the overlayImage pane.
+  var panes = this.getPanes();
+  panes.overlayLayer.appendChild(div);
+}
+
+USGSOverlay.prototype.draw = function() {
+
+  // Size and position the overlay. We use a southwest and northeast
+  // position of the overlay to peg it to the correct position and size.
+  // We need to retrieve the projection from this overlay to do this.
+  var overlayProjection = this.getProjection();
+
+  // Retrieve the southwest and northeast coordinates of this overlay
+  // in latlngs and convert them to pixels coordinates.
+  // We'll use these coordinates to resize the DIV.
+  //var sw = overlayProjection.fromLatLngToDivPixel(new google.maps.LatLng(37.613545, -122.357237));
+  var ne = overlayProjection.fromLatLngToDivPixel(this.latlng_);
+
+  // Resize the image's DIV to fit the indicated dimensions.
+  var div = this.div_;
+  div.style.left = ne.x + 'px';
+  div.style.top = ne.y + 'px';
+  div.style.width = '100px';
+  div.style.height = '20px';
+}
 
 //*******************************************************************************
 // Core Object
@@ -21,7 +83,7 @@ this.epoch = new Date().getTime();
 
 this.webSocket = null;
 this.Map = null
-this.myOverlay = null
+this.callsignOverlays = {}
 
 this.markers = {} //* Aircraft Markers
 this.markersInfo = {} //** Experimantal info window
@@ -50,7 +112,7 @@ this.map_initialize =  function () {
 		//FIXME - wtf this doent exist as event
 		//console.log("mousemove", latlng);
 	//});
-	self.myOverlay = new MyOverlay(self.Map);
+	//self.myOverlay = new MyOverlay(self.Map);
 	
 }
 
@@ -338,7 +400,7 @@ this.create_socket = function (){
 		}
 		var pilots =  json['pilots'];
 		self.statusLabel.setText(pilots.length);
-		var projection = self.myOverlay.getProjection();
+		//var projection = self.myOverlay.getProjection();
 		//console.log(pilots);
 		//* loop thru existing pilots and update
 
@@ -380,7 +442,7 @@ this.create_socket = function (){
 						var latlng = new google.maps.LatLng(r.lat, r.lng);
 						//** Update marker
 						self.markers[r.callsign].setPosition(latlng); 
-						
+						self.callsignOverlays[pilots[p].callsign].setPosition(latlng);
 					
 						//rec.set('alt', pilots[rec.id].alt);
 						//rec.set('heading', pilots[rec.id].heading);
@@ -431,13 +493,25 @@ this.create_socket = function (){
 		//* add new pilots_list
 		for(var p in pilots){
 			
-			pilots[p].flag = 1;
+			//pilots[p].flag = 1;
+
+			//** create new record
 			var pRec = new PilotRecord(pilots[p], p);
 			pRec.set('altp', pilots[p].alt);
-			//console.log(pRec.get('alt'), pRec.get('palt'));
+			pRec.set('flag', 1);
 			self.pilotsStore.add(pRec);
+
+			//** Add New Marker
 			var latlng = new google.maps.LatLng(pilots[p].lat, pilots[p].lng);
-			//self.markers[pilots[p].callsign] = new Array();
+			self.markers[pilots[p].callsign] = new google.maps.Marker({
+									position: latlng, 
+									map: self.Map,
+									title: pilots[p].callsign,
+									icon: self.icons.level_blue
+			});
+
+			self.callsignOverlays[pilots[p].callsign] = new USGSOverlay(pilots[p].callsign, latlng, self.Map);
+	
 
 			//** Create the PolyLines and Coordinates object
 			self.polyCoordinates[pilots[p].callsign] = new google.maps.MVCArray();
@@ -452,20 +526,19 @@ this.create_socket = function (){
 
 			//var foo = new google.maps.
 			//console.log(self.Map)
-			//console.log(self.myOverlay.getProjection().fromLatLngToDivPixel(latlng));
+			//var points = self.myOverlay.getProjection().fromLatLngToDivPixel(latlng);
+			//console.log(points);
 			//var div = document.createElement("div");
-			//div.appendChild(document.createTextNode(pilots[p].callsign));
-			//document.body.appendChild(div)
+			//div.appendChild(document.createTextNode("@@@@")) //pilots[p].callsign));
 			//document.getElementById("map_canvas").appendChild(div);
+			//document.body.appendChild(div);
+			//div.style.position = "absolute";
+			//div.style.top = 600;
+			//div.style.left = 600;
+
 
 			//#//var path = 
-			var marker = new google.maps.Marker({
-										position: latlng, 
-										map: self.Map,
-										title: pilots[p].callsign,
-										icon: self.icons.level_blue
-			});
-			self.markers[pilots[p].callsign] =  marker;
+
 			delete pilots[p]
 		}
 

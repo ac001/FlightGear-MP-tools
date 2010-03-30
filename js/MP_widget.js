@@ -125,11 +125,11 @@ this.altitude_image = function(alt_trend, is_selected){
 }
 this.altitude_color = function(v){
 	if(v < 1000){
-		color = '#931429';
+		color = 'red';
 	}else if(v < 2000){
 		color = '#FA405F';
 	}else if(v < 4000){
-		color = '#CCFA40';
+		color = '#A47F24';
 	}else if(v < 6000){
 		color = '#7FFA40';
 	}else if(v < 8000){
@@ -164,16 +164,13 @@ var PilotRecord = Ext.data.Record.create([
 	{name: 'flag', type: 'int'},
 	{name: 'check', type: 'int'},
 	{name: "callsign", type: 'string'},
-	{name: "server_ip", type: 'string'},
-	{name: "model", type: 'string'},
+	{name: "server", type: 'string'},
+	{name: "aircraft", type: 'string'},
 	{name: "lat", type: 'float'},
 	{name: "lng", type: 'float'},
 	{name: "alt", type: 'int'},
 	{name: "alt_trend", type: 'string'},
-	{name: "heading", type: 'string'},
-	{name: "pheading", type: 'string'},
-	{name: "pitch", type: 'string'},
-	{name: "roll", type: 'string'}
+	{name: "heading", type: 'string'}
 ]);
 
 //* Pilots Datastore
@@ -182,16 +179,13 @@ this.pilotsStore = new Ext.data.Store({
 	fields: [ 	{name: 'flag', type: 'int'},
 				{name: 'check', type: 'int'},
 				{name: "callsign", type: 'string'},
-				{name: "server_ip", type: 'string'},
-				{name: "model", type: 'string'},
+				{name: "server", type: 'string'},
+				{name: "aircraft", type: 'string'},
 				{name: "lat", type: 'float'},
 				{name: "lng", type: 'float'},
 				{name: "alt", type: 'int'},
 				{name: "alt_trend", type: 'string'},
-				{name: "heading", type: 'string'},
-				{name: "pheading", type: 'string'},
-				{name: "pitch", type: 'string'},
-				{name: "roll", type: 'string'}
+				{name: "heading", type: 'string'}
 	],
 	remoteSort: false,
 	sortInfo: {field: "callsign", direction: 'ASC'}
@@ -236,23 +230,22 @@ this.pilotsLookupGrid = new Ext.grid.GridPanel({
 	//TODO sm: pilotsSelectionModel,
 	columns: [  this.checkSelectionModel,
 				{header: 'CallSign',  dataIndex:'callsign', sortable: true, renderer: this.render_callsign},
-				{header: 'Aircraft',  dataIndex:'model', sortable: true, hidden: true},
-				{header: 'Alt', dataIndex:'alt', sortable: true, align: 'right',
+						{header: 'Alt', dataIndex:'alt', sortable: true, align: 'right',
 					renderer: this.render_altitude
 				},
-				{header: '', dataIndex:'alt_trend', sortable: true, align: 'center', width: 20,
-					renderer: this.render_altitude_trend
-				},
-				{header: 'Lat', dataIndex:'lat', sortable: true, align: 'right',
+				{header: '', dataIndex:'alt_trend', sortable: true, align: 'center', width: 20,	renderer: this.render_altitude_trend},
+				/*
+				{header: 'Lat', dataIndex:'lat', sortable: true, align: 'right', hidden: true,
 					renderer: function(v, meta, rec, rowIdx, colIdx, store){
 						return Ext.util.Format.number(v, '0.000');
 					}
 				},
-				{header: 'Lng', dataIndex:'lng', sortable: true, align: 'right',
+				{header: 'Lng', dataIndex:'lng', sortable: true, align: 'right', hidden: true,
 					renderer: function(v, meta, rec, rowIdx, colIdx, store){
 						return Ext.util.Format.number(v, '0.000');
 					}
-				} 
+				}, */
+				{header: 'Aircraft', dataIndex:'aircraft', sortable: true, align: 'left'}
 	],
 	listeners: {},
 	bbar: [this.pilotsSummaryCountLabel, '->',  this.statusLabel]
@@ -276,10 +269,23 @@ this.pilotsMainGrid = new Ext.grid.GridPanel({
 	store: this.pilotsStore,
 	loadMask: true,
 	columns: [  //this.selModel,	
-		{header: 'F',  dataIndex:'flag', sortable: true, width: 40},
+		{header: 'F',  dataIndex:'flag', sortable: true, width: 40, hidden: true},
 		{header: 'CallSign',  dataIndex:'callsign', sortable: true, renderer: this.render_callsign},
-		{header: 'Aircraft',  dataIndex:'model', sortable: true},
-
+		{header: 'Aircraft',  dataIndex:'aircraft', sortable: true, sssrenderer: this.render_callsign},
+		{header: 'Alt', dataIndex:'alt', sortable: true, align: 'right',
+			renderer: this.render_altitude
+		},
+		{header: '', dataIndex:'alt_trend', sortable: true, align: 'center', width: 20,	renderer: this.render_altitude_trend},
+		{header: 'Heading', dataIndex:'heading', sortable: true, align: 'right',
+			renderer: function(v, meta, rec, rowIdx, colIdx, store){
+				return Ext.util.Format.number(v, '0');
+			}
+		},
+		{header: 'Airspeed', dataIndex:'airspeed', sortable: true, align: 'right',
+			renderer: function(v, meta, rec, rowIdx, colIdx, store){
+				return Ext.util.Format.number(v, '0');
+			}
+		},
 		{header: 'Lat', dataIndex:'lat', sortable: true, align: 'right',
 			renderer: function(v, meta, rec, rowIdx, colIdx, store){
 				return Ext.util.Format.number(v, '0.000');
@@ -290,25 +296,7 @@ this.pilotsMainGrid = new Ext.grid.GridPanel({
 				return Ext.util.Format.number(v, '0.000');
 			}
 		},
-		{header: 'Alt', dataIndex:'alt', sortable: true, align: 'right',
-			DEADrenderer: this.render_altitude
-		},
-		{header: 'Heading', dataIndex:'heading', sortable: true, align: 'right',
-			renderer: function(v, meta, rec, rowIdx, colIdx, store){
-				return Ext.util.Format.number(v, '0');
-			}
-		},
-		{header: 'Pitch', dataIndex:'pitch', sortable: true, align: 'right',
-			renderer: function(v, meta, rec, rowIdx, colIdx, store){
-				return Ext.util.Format.number(v, '0');
-			}
-		},
-		{header: 'Roll', dataIndex:'roll', sortable: true, align: 'right',
-			renderer: function(v, meta, rec, rowIdx, colIdx, store){
-				return Ext.util.Format.number(v, '0');
-			}
-		},
-		{header: 'Server', dataIndex:'server_ip', sortable: true, align: 'left',
+		{header: 'Server', dataIndex:'server', sortable: true, align: 'left',
 			renderer: function(v, meta, rec, rowIdx, colIdx, store){
 				return v;
 			}
@@ -327,7 +315,7 @@ this.viewport = new Ext.Viewport({
 	plain: true,
 	items: [
 		//** Left/West area
-		{title: 'FlightGear WebSocket Map <small>v0.1-experimental</small>', 
+		{title: 'FlightGear WebSocket Map <small>v0.1-exp</small>', 
 			region: 'west',
 			split: true,
 			width: 300,
@@ -442,7 +430,11 @@ this.create_socket = function (){
 						if(path.getLength() == 50){
 							path.pop() //(9);
 						}
-						path.insertAt(0, latlng);
+						if(latlng.lat() == 0 && latlng.lng() == 0){
+							console.log("dropped", latlng);
+						}else{
+							path.insertAt(0, latlng);
+						}
 
 						delete pilots[callsign]
 					}else{

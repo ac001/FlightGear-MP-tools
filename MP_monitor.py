@@ -160,7 +160,8 @@ class MP_MonitorBot(QtCore.QObject):
 		#return
 		#print self.host2ip	
 		#return
-		host_address = "mpserver01.flightgear.org"
+		host_address = self.host2ip["mpserver02.flightgear.org"]
+		print "host_address=", host_address
 		#for ip in self.ip2host:
 		#host_address = self.ip2host[ip]
 		if not self.telnetSocket.has_key(host_address):
@@ -194,10 +195,10 @@ class MP_MonitorBot(QtCore.QObject):
 		if len(self.telnetString[host_address]) == 0: ## Nothing there - happens sometimes
 			return
 
+		## We calculate studd (eg alt) every five seconds
 		do_calc_update = False
 		epoch = time.time()
-		if epoch - self.last_calc > 5:
-			print "DO CALC", epoch, epoch - self.last_calc
+		if (epoch - self.last_calc) > mp_config.CALC_UPDATE_INTERNAL:
 			self.last_calc = epoch
 			do_calc_update = True
 
@@ -213,15 +214,24 @@ class MP_MonitorBot(QtCore.QObject):
 				# Origin, LastPos[X], LastPos[Y], LastPos[Z],
 				# PlayerPosGeod[Lat], PlayerPosGeod[Lon], PlayerPosGeod[Alt],
 				# LastOrientation[X], LastOrientation[Y], LastOrientation[Z], ModelName
-
-				callsign = parts[0].split("@")[0].strip()
+				call_ident = parts[0].split("@")
+				callsign = call_ident[0].strip()
+							
 				if callsign != '':
 					pilot = {}
+					pilot_ip = call_ident[1][:-1]
+					#print host_address, server_ip
+					if pilot_ip == 'LOCAL':
+						pilot_ip = host_address
+					pilot['server'] = self.ip2host[pilot_ip].split('.')[0] if self.ip2host.has_key(pilot_ip) else pilot_ip
+
 					pilot['ident'] = parts[0]
 					pilot['lat'] = parts[4]
 					pilot['lng'] = parts[5]
 					pilot['alt'] = parts[6].split(".")[0] if parts[6].find('.') > 0 else parts[6]
 					pilot['aircraft'] = parts[10].split("/")[-1].replace('.xml', '')
+
+
 
 					#if do_update == True:
 					if not self.pilotsHistory.has_key(callsign):

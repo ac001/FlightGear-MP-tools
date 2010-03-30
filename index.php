@@ -52,7 +52,9 @@ var WEB_SOCKET_ADDRESS = "ws://<?php echo $domain; ?>:5050/";
 .x-grid3-td-5 {background-image:none!important;}
 .x-grid3-td-6 {background-image:none!important;}
 .x-grid3-td-7 {background-image:none!important;}
-
+.x-grid3-td-8 {background-image:none!important;}
+.x-grid3-td-9 {background-image:none!important;}
+.x-grid3-td-10 {background-image:none!important;}
 </style>
   
 <script type="text/javascript"  src="js/MP_widget.js"></script> 

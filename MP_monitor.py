@@ -255,10 +255,16 @@ class MP_MonitorBot(QtCore.QObject):
 							pilot['alt_trend'] = alt_trend
 	
 							## Heading
-							lat1 = prev_pilot['lat']
-							lon1 = prev_pilot['lng']
-							lat2 = lat
-							lon2 = lng
+							if(1 == 0):
+								lat1 =  (pi/180) * prev_pilot['lat'] ## (pi/180) *
+								lon1 =  (pi/180) * prev_pilot['lng']
+								lat2 =  (pi/180) * lat
+								lon2 =  (pi/180) * lng
+							else:
+								lat1 =  prev_pilot['lat'] ## (pi/180) *
+								lon1 =  prev_pilot['lng']
+								lat2 =  lat
+								lon2 =  lng
 							
 							try:
 								dist = acos( sin(lat1) * sin(lat2) + cos(lat1) * cos(lat2) * cos(lon1-lon2))

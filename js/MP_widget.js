@@ -17,6 +17,8 @@ function MP_Widget(){
 
 var self = this;
 
+this.epoch = new Date().getTime();
+
 this.webSocket = null;
 this.Map = null
 this.myOverlay = null
@@ -25,8 +27,6 @@ this.markers = {} //* Aircraft Markers
 this.markersInfo = {} //** Experimantal info window
 this.polyLines = {} //* Poly line object
 this.polyCoordinates = {} //* Coordinated from polyLines
-
-
 
 this.icons = {};
 this.icons.blip_red 		= 'images/red_dot.png';
@@ -116,7 +116,10 @@ var PilotRecord = Ext.data.Record.create([
 	{name: "lat", type: 'float'},
 	{name: "lng", type: 'float'},
 	{name: "alt", type: 'int'},
+	{name: "altp", type: 'int'},
+	{name: "altd", type: 'string'},
 	{name: "heading", type: 'string'},
+	{name: "pheading", type: 'string'},
 	{name: "pitch", type: 'string'},
 	{name: "roll", type: 'string'}
 ]);
@@ -134,7 +137,10 @@ this.pilotsStore = new Ext.data.Store({
 				{name: "lat", type: 'float'},
 				{name: "lng", type: 'float'},
 				{name: "alt", type: 'int'},
+				{name: "altp", type: 'int'},
+				{name: "altd", type: 'string'},
 				{name: "heading", type: 'string'},
+				{name: "pheading", type: 'string'},
 				{name: "pitch", type: 'string'},
 				{name: "roll", type: 'string'}
 	]
@@ -175,6 +181,17 @@ this.pilotsLookupGrid = new Ext.grid.GridPanel({
 						return v;
 					}
 				},
+				/*{header: 'PAlt', dataIndex:'altp', sortable: true, align: 'right',
+					renderer: function(v, meta, rec, rowIdx, colIdx, store){
+						return v;
+					}
+				},
+				{header: 'Altd', dataIndex:'altd', sortable: true, align: 'right',
+					renderer: function(v, meta, rec, rowIdx, colIdx, store){
+						return v;
+					}
+				}*/
+				/*, */
 				{header: 'Lat', dataIndex:'lat', sortable: true, align: 'right',
 					renderer: function(v, meta, rec, rowIdx, colIdx, store){
 						return Ext.util.Format.number(v, '0.000');
@@ -184,7 +201,7 @@ this.pilotsLookupGrid = new Ext.grid.GridPanel({
 					renderer: function(v, meta, rec, rowIdx, colIdx, store){
 						return Ext.util.Format.number(v, '0.000');
 					}
-				}
+				} 
 	],
 	listeners: {},
 	bbar: [this.pilotsSummaryCountLabel, '->',  this.statusLabel]
@@ -322,8 +339,16 @@ this.create_socket = function (){
 		var pilots =  json['pilots'];
 		self.statusLabel.setText(pilots.length);
 		var projection = self.myOverlay.getProjection();
-		console.log(pilots);
+		//console.log(pilots);
 		//* loop thru existing pilots and update
+
+		var curr_epoch =  new Date().getTime();
+		var altitude_update = false;
+		if( (curr_epoch - self.epoch) > 5000){
+			altitude_update = true;
+			self.epoch = curr_epoch;
+		}
+		//console.log(altitude_update, curr_epoch, self.epoch, (curr_epoch - self.epoch));
 		if(self.pilotsStore.getCount() > 0){
 			//for(var idx=0; idx <= pilotsStore.getCount(); idx++){
 			self.pilotsStore.each( function(rec){	
@@ -331,13 +356,32 @@ this.create_socket = function (){
 				if(rec){
 					//#console.log( rec.id);
 
-					if(pilots[rec.id]){
-						var r = pilots[rec.id]
+					if( pilots[rec.id] ){
+
 						//* Pilot exists so update
+						var r = pilots[rec.id]
+
+						if(altitude_update){
+							var icon = self.icons.level_blue;
+							var alt_diff = r.alt - rec.get('altp');
+							if(Math.abs(alt_diff) > 100){ //* only interested if its changed 100ft or more
+								rec.set('altp', r.alt);
+								icon = alt_diff > 0 ? self.icons.up_blue : self.icons.down_blue;
+								//rec.set('altd', icon);
+							}
+							self.markers[r.callsign].setIcon(icon); 
+						}
+						//rec.set('altd', alt_diff);
 						rec.set('flag', 0);
 						rec.set('lat', r.lat);
 						rec.set('lng', r.lng);
 						rec.set('alt', r.alt);
+	
+						var latlng = new google.maps.LatLng(r.lat, r.lng);
+						//** Update marker
+						self.markers[r.callsign].setPosition(latlng); 
+						
+					
 						//rec.set('alt', pilots[rec.id].alt);
 						//rec.set('heading', pilots[rec.id].heading);
 						//rec.set('pitch', pilots[rec.id].pitch);
@@ -349,13 +393,8 @@ this.create_socket = function (){
 						}
 						self.markers[r.callsign][0].setIcon(icons.yellow_blip);
 						*/
-						var latlng = new google.maps.LatLng(r.lat, r.lng);
-						self.markers[r.callsign].setPosition(latlng); // = new google.maps.Marker({
-
-
 						
-						
-			
+	
 						var path = self.polyLines[r.callsign].getPath();
 						if(path.getLength() == 50){
 							path.pop() //(9);
@@ -394,6 +433,8 @@ this.create_socket = function (){
 			
 			pilots[p].flag = 1;
 			var pRec = new PilotRecord(pilots[p], p);
+			pRec.set('altp', pilots[p].alt);
+			//console.log(pRec.get('alt'), pRec.get('palt'));
 			self.pilotsStore.add(pRec);
 			var latlng = new google.maps.LatLng(pilots[p].lat, pilots[p].lng);
 			//self.markers[pilots[p].callsign] = new Array();
@@ -412,8 +453,8 @@ this.create_socket = function (){
 			//var foo = new google.maps.
 			//console.log(self.Map)
 			//console.log(self.myOverlay.getProjection().fromLatLngToDivPixel(latlng));
-			var div = document.createElement("div");
-			div.appendChild(document.createTextNode(pilots[p].callsign));
+			//var div = document.createElement("div");
+			//div.appendChild(document.createTextNode(pilots[p].callsign));
 			//document.body.appendChild(div)
 			//document.getElementById("map_canvas").appendChild(div);
 

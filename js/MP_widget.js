@@ -27,20 +27,17 @@ USGSOverlay.prototype.onAdd = function() {
   // the overlay to the map via the DOM.
 
   // Create the DIV and set some basic attributes.
-  var div = document.createElement('DIV');
-  div.style.borderStyle = "none";
-  div.style.borderWidth = "0px";
-  div.style.position = "absolute";
-  div.style.backgroundColor = "black";
+	var div = document.createElement('DIV');
+	div.style.borderStyle = "none";
+	div.style.borderWidth = "0px";
+	div.style.position = "absolute";
+	//div.style.backgroundColor = "black";
+	div.className = 'pilot_marker';
 
-  // Create an IMG element and attach it to the DIV.
-  var para = document.createElement("p");
-  para.style.color = "white";
-  //para.style.width = "100px";
-  //para.style.height = "20px";
-  div.appendChild(para);
-  var txt = document.createTextNode("FOOO");
-  para.appendChild(txt);
+	var para = document.createElement("p");
+	para.appendChild(document.createTextNode(this.callsign_));
+	div.appendChild(para);
+  
 
   // Set the overlay's div_ property to this DIV
   this.div_ = div;
@@ -52,26 +49,21 @@ USGSOverlay.prototype.onAdd = function() {
 }
 
 USGSOverlay.prototype.draw = function() {
-
-  // Size and position the overlay. We use a southwest and northeast
-  // position of the overlay to peg it to the correct position and size.
-  // We need to retrieve the projection from this overlay to do this.
-  var overlayProjection = this.getProjection();
-
-  // Retrieve the southwest and northeast coordinates of this overlay
-  // in latlngs and convert them to pixels coordinates.
-  // We'll use these coordinates to resize the DIV.
-  //var sw = overlayProjection.fromLatLngToDivPixel(new google.maps.LatLng(37.613545, -122.357237));
-  var ne = overlayProjection.fromLatLngToDivPixel(this.latlng_);
+  var point = this.getProjection().fromLatLngToDivPixel(this.latlng_);
 
   // Resize the image's DIV to fit the indicated dimensions.
   var div = this.div_;
-  div.style.left = ne.x + 'px';
-  div.style.top = ne.y + 'px';
-  div.style.width = '100px';
-  div.style.height = '20px';
+  div.style.left = point.x + 'px';
+  div.style.top = point.y + 'px';
+  //div.style.width = '100px';
+  //div.style.height = '20px';
 }
 
+USGSOverlay.prototype.setPosition = function(latlng) {
+	var point =  this.getProjection().fromLatLngToDivPixel(latlng);
+	this.div_.style.left = point.x + 'px';
+	this.div_.style.top = point.y + 'px';
+}
 //*******************************************************************************
 // Core Object
 //*******************************************************************************
@@ -442,7 +434,7 @@ this.create_socket = function (){
 						var latlng = new google.maps.LatLng(r.lat, r.lng);
 						//** Update marker
 						self.markers[r.callsign].setPosition(latlng); 
-						self.callsignOverlays[pilots[p].callsign].setPosition(latlng);
+						self.callsignOverlays[r.callsign].setPosition(latlng);
 					
 						//rec.set('alt', pilots[rec.id].alt);
 						//rec.set('heading', pilots[rec.id].heading);

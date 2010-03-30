@@ -32,7 +32,17 @@ var WEB_SOCKET_ADDRESS = "ws://<?php echo $domain; ?>:5050/";
 
 <link rel="stylesheet" type="text/css" href="style_sheets/v3.css">
 <!--<script type="text/javascript" src="js/FG_PilotsGrid.js"></script>-->
+<style>
+.pilot_marker{
+	background-color: black;
+	
+	color: white;
+	font-family: sans-serif;
+	font-size: 7pt;
+	padding: 3px;
+}
 
+</style>
   
 <script type="text/javascript"  src="js/MP_widget.js"></script> 
 

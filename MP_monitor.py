@@ -249,7 +249,10 @@ class MP_MonitorBot(QtCore.QObject):
 					pilot['aircraft'] = parts[10].split("/")[-1].replace('.xml', '')
 
 					#pilot['ident'] = parts[0]
-					lat = float(parts[4])
+					try:
+						lat = float(parts[4])
+					except:
+						print "ERR", parts
 					pilot['lat'] = lat
 					lng = float(parts[5])
 					pilot['lng'] = lng
@@ -386,9 +389,14 @@ def calc_heading(deglat1, deglng1, deglat2, deglng2):
 
 
 if __name__ == '__main__':
-	main()
+	#main()
 
-	#print "distance", calc_crow_distance(37.613721, -122.357225, 37.6287, -122.3932)
-	#print "heading", calc_heading(37.613721, -122.357225, 37.6287, -122.3932)
+	print "KSFO 28R ", calc_heading(37.613721, -122.357225, 37.6287, -122.3932)
 
+	# London City to Heathrow - across meridian
+	print "EGLC TO EGLL ", calc_heading(51.50995, 0.059566, 51.470477, -0.460224 )
+	print "EGLL TO  EGLC", calc_heading( 51.470477, -0.460224, 51.50995, 0.059566)
+	print "EGLL TO  Luton", calc_heading( 51.470477, -0.460224, 51.86772, -0.304871)
+	print "Sstanstead TO EGLL ", calc_heading(51.881578, 0.247179, 51.470477, -0.460224 )
 
+	print "Sstanstead TO EGLL ", calc_heading(51.881578, 0.247179, 51.470477, -0.460224 )

@@ -451,11 +451,14 @@ this.create_socket = function (){
 							self.pilotsStore.removeAt( self.pilotsStore.indexOfId(callsign));
 							//* remove markers
 							self.markers[callsign].setMap(null);
-							delete self.markers[callsign]
+							delete self.markers[callsign];
+							//* Callsign
+							self.callsignOverlays[callsign].setMap(null);
+							delete self.callsignOverlays[callsign];
 							//* remove poly lines
 							self.polyLines[callsign].setMap(null);
-							delete self.polyLines[callsign]
-							delete self.polyCoordinates[callsign]
+							delete self.polyLines[callsign];
+							delete self.polyCoordinates[callsign];
 							
 						}else{
 							if(f > 0){

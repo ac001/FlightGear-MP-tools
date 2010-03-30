@@ -12,7 +12,7 @@ UPDATE_DNS = "%s/update/dns/" % MASTER_MACHINE
 DNS_INTERVAL = 500
 
 ## Time between updates of position, trends
-CALC_UPDATE_INTERNAL = 5
+CALC_UPDATE_INTERNAL = 10
 
 ALT_DIFF_THRESHOLD = 75 ## only changes more (interval above) will show climb or descend
 

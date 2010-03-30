@@ -251,8 +251,12 @@ this.pilotsLookupGrid = new Ext.grid.GridPanel({
 						return Ext.util.Format.number(v, '0.000');
 					}
 				}, */
-				{header: 'Dist', dataIndex:'dist', sortable: true, align: 'left'},
-				{header: 'Hdg', dataIndex:'hdg', sortable: true, align: 'left'}
+				{header: 'Dist', dataIndex:'dist', sortable: true, align: 'left', hidden: true},
+				{header: 'Hdg', dataIndex:'hdg', sortable: true, align: 'left',
+					renderer: function(v, meta, rec, rowIdx, colIdx, cstore){
+						return Ext.util.Format.number(v, '0.000');
+					}
+				}
 	],
 	listeners: {},
 	bbar: [this.pilotsSummaryCountLabel, '->',  this.statusLabel]
@@ -300,12 +304,12 @@ this.pilotsMainGrid = new Ext.grid.GridPanel({
 		},
 		{header: 'Lat', dataIndex:'lat', sortable: true, align: 'right',
 			renderer: function(v, meta, rec, rowIdx, colIdx, store){
-				return Ext.util.Format.number(v, '0.000');
+				return Ext.util.Format.number(v, '0.00000');
 			}
 		},
 		{header: 'Lng', dataIndex:'lng', sortable: true, align: 'right',
 			renderer: function(v, meta, rec, rowIdx, colIdx, store){
-				return Ext.util.Format.number(v, '0.000');
+				return Ext.util.Format.number(v, '0.00000');
 			}
 		},
 		{header: 'Server', dataIndex:'server', sortable: true, align: 'left',

@@ -1,10 +1,28 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
+
+### rought points
+# rwy 28r at KSFO ]
+"""
+print "KSFO 28R ", calc_heading(37.613721, -122.357225, 37.6287, -122.3932)
+
+# London City to Heathrow - across meridian
+print "EGLC TO EGLL ", calc_heading(51.50995, 0.059566, 51.470477, -0.460224 )
+print "EGLL TO  EGLC", calc_heading( 51.470477, -0.460224, 51.50995, 0.059566)
+print "EGLL TO  Luton", calc_heading( 51.470477, -0.460224, 51.86772, -0.304871)
+print "Sstanstead TO EGLL ", calc_heading(51.881578, 0.247179, 51.470477, -0.460224 )
+
+
+sys.exit(0)
+"""
+
 import sys
 import signal
 import time
 from math import *
+
 import simplejson as json
 from PyQt4 import QtCore
 from PyQt4 import QtNetwork
@@ -162,9 +180,9 @@ class MP_MonitorBot(QtCore.QObject):
 		#return
 		#print self.host2ip	
 		#return
-		if not self.host2ip.has_key("mpserver03.flightgear.org"):
+		if not self.host2ip.has_key("mpserver04.flightgear.org"):
 			return
-		host_address = self.host2ip["mpserver03.flightgear.org"]
+		host_address = self.host2ip["mpserver04.flightgear.org"]
 		#print "host_address=", host_address
 		#for ip in self.ip2host:
 		#host_address = self.ip2host[ip]
@@ -205,7 +223,7 @@ class MP_MonitorBot(QtCore.QObject):
 		if (epoch - self.last_calc) > mp_config.CALC_UPDATE_INTERNAL:
 			self.last_calc = epoch
 			do_calc_update = True
-			print "update cycle"
+			print "-------------------------\nupdate cycle"
 		lines = self.telnetString[host_address].split("\n")
 		pilots = {}
 		for line in lines:
@@ -228,24 +246,27 @@ class MP_MonitorBot(QtCore.QObject):
 					if pilot_ip == 'LOCAL':
 						pilot_ip = host_address
 					pilot['server'] = self.ip2host[pilot_ip].split('.')[0] if self.ip2host.has_key(pilot_ip) else pilot_ip
+					pilot['aircraft'] = parts[10].split("/")[-1].replace('.xml', '')
 
 					#pilot['ident'] = parts[0]
 					lat = float(parts[4])
 					pilot['lat'] = lat
 					lng = float(parts[5])
 					pilot['lng'] = lng
+
 					pilot['alt'] = parts[6].split(".")[0] if parts[6].find('.') > 0 else parts[6]
-					pilot['aircraft'] = parts[10].split("/")[-1].replace('.xml', '')
 
 					## Pilot not in history so add
 					if not self.pilotsHistory.has_key(callsign):
-						self.pilotsHistory[callsign] =  {'alt': pilot['alt'], 'alt_trend': 'level', 'lat': lat, 'lng': lng, 'hdg': None, 'dist': None}
-
+						self.pilotsHistory[callsign] =  {	'alt': pilot['alt'], 'alt_trend': 'level', 
+															'lat': lat, 'lng': lng, 
+															'hdg': 0, 'dist': 0
+														}
 					## Pilot has history
 					else:
 						## Update cycle so calc altitude trend, heading and airspeed
 						if do_calc_update == True:
-							##print "up"
+							
 							prev_pilot = self.pilotsHistory[callsign]
 
 							## Altitude trend
@@ -260,17 +281,20 @@ class MP_MonitorBot(QtCore.QObject):
 	
 							## Heading
 							dist = None
-							hdg = self.heading(prev_pilot['lat'], lat, prev_pilot['lng'], lng)
-							pilot['hdg'] = hdg
+							pilot['hdg'] = calc_heading(prev_pilot['lat'], lat, prev_pilot['lng'], lng)
+							#if prev_pilot['lat'] != lat:
+								#print  callsign, self.pilotsHistory[callsign]['hdg'] == pilot['hdg'], self.pilotsHistory[callsign]['hdg'], pilot['hdg'], prev_pilot['lat'], lat, prev_pilot['lng'], lng
+							#pilot['hdg'] = hdg
 							self.pilotsHistory[callsign] = {'alt': pilot['alt'], 'alt_trend': alt_trend, 
 															'lat': lat, 'lng': lng, 
-															'hdg': hdg, 'dist': dist}
+															'hdg': pilot['hdg'], 'dist': dist}
 							
 						else:
 							pilot['alt_trend'] = self.pilotsHistory[callsign]['alt_trend']
 							pilot['hdg'] = self.pilotsHistory[callsign]['hdg']
 							pilot['dist'] = self.pilotsHistory[callsign]['dist']
 							#print "=", pilot['alt_trend']
+						
 					pilots[callsign] = pilot
 					#print pilot
 	
@@ -290,24 +314,7 @@ class MP_MonitorBot(QtCore.QObject):
 				print "online=", len(pilots)
 		self.increment += 1
 
-	#######################################################
-	## Calculations - thanks http://www.movable-type.co.uk/scripts/latlong.html
-	def calc_crow_distance(self, lat1, lng1, lat2, lng2):
-		R = 6371;
-		dLat = radians(lat2 - lat1)
-		dLng = radians(lng2 - lng1)	
-		a = sin(dLat/2) * sin(dLat/2) +  cos(radians(lat1)) * cos(radians(lat2)) * sin(dLng/2) * sin(dLng/2)
-		c = 2 * atan2(sqrt(a), sqrt(1-a))
-		return R * c
 
-	def heading(self, deglat1, deglng1, deglat2, deglng2):
-		lat1 = radians(deglat1) 
-		lat2 = radians(deglat2)
-		dLng = radians(deglng2 - deglng1)
-		y = sin(dLng) * cos(lat2);
-		x = cos(lat1) * sin(lat2) -	sin(lat1) * cos(lat2) * cos(dLng)
-		brng = atan2(y, x)
-		return round( (degrees(brng) + 360) % 360 )
 
 
 	#######################################################
@@ -355,8 +362,26 @@ def main():
 	#monitorBot.run()
 	return app.exec_()
 
+#######################################################
+## Calculations - thanks http://www.movable-type.co.uk/scripts/latlong.html
+def calc_crow_distance(self, lat1, lng1, lat2, lng2):
+	R = 6371;
+	dLat = radians(lat2 - lat1)
+	dLng = radians(lng2 - lng1)	
+	a = sin(dLat/2) * sin(dLat/2) +  cos(radians(lat1)) * cos(radians(lat2)) * sin(dLng/2) * sin(dLng/2)
+	c = 2 * atan2(sqrt(a), sqrt(1-a))
+	return R * c
 
 
+## decimal degree inputs from MP server
+def calc_heading(deglat1, deglng1, deglat2, deglng2):
+	lat1 = radians(deglat1) 
+	lat2 = radians(deglat2)
+	dLng = radians(deglng2 - deglng1)
+	y = sin(dLng) * cos(lat2);
+	x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dLng)
+	brng = atan2(y, x)
+	return (degrees(brng) + 360) % 360
 
 
 
@@ -364,6 +389,6 @@ if __name__ == '__main__':
 	main()
 
 	#print "distance", calc_crow_distance(37.613721, -122.357225, 37.6287, -122.3932)
-	#print "heading", heading(37.613721, -122.357225, 37.6287, -122.3932)
+	#print "heading", calc_heading(37.613721, -122.357225, 37.6287, -122.3932)
 
 

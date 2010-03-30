@@ -58,12 +58,18 @@ this.polyLines = {} //* Poly line object
 this.polyCoordinates = {} //* Coordinated from polyLines
 
 this.icons = {};
-this.icons.blip_red 		= 'images/red_dot.png';
-this.icons.blip_yellow 		= 'images/yellow_dot.png';
 
-this.icons.level_blue		= 'images/level_blue.png';
-this.icons.climb_blue			= 'images/up_blue.png';
-this.icons.descend_blue		= 'images/down_blue.png';
+this.icons.level = {}
+this.icons.level.blue		= 'images/level_blue.png';
+this.icons.level.red		= 'images/level_red.png';
+
+this.icons.climb = {}
+this.icons.climb.blue		= 'images/climb_blue.png';
+this.icons.climb.red		= 'images/climb_red.png';
+
+this.icons.descend = {}
+this.icons.descend.blue		= 'images/descend_blue.png';
+this.icons.descend.red		= 'images/descend_red.png';
 
 
 this.map_initialize =  function () {
@@ -109,11 +115,12 @@ this.render_altitude = function (v, meta, rec, rowIdx, colIdx, store){
 this.render_altitude_trend = function (v, meta, rec, rowIdx, colIdx, store){
 	return "<img src='" + self.altitude_image(v) + "'>";
 }
-this.altitude_image = function(alt_trend){
+this.altitude_image = function(alt_trend, is_selected){
+	var color = is_selected ? 'red' : 'blue';
 	if(alt_trend == 'level'){
-		return self.icons.level_blue;
+		return self.icons.level[color];
 	}
-	return alt_trend == 'climb' ? self.icons.climb_blue : self.icons.descend_blue;
+	return alt_trend == 'climb' ? self.icons.climb[color] : self.icons.descend[color];
 }
 this.altitude_color = function(v){
 	if(v < 1000){
@@ -167,9 +174,6 @@ var PilotRecord = Ext.data.Record.create([
 	{name: "roll", type: 'string'}
 ]);
 
-//* list of pilot markers (atmo there is no ID etc in api3)
-this.pilotMarkers = {};
-
 //* Pilots Datastore
 this.pilotsStore = new Ext.data.Store({
 	idProperty: 'callsign',
@@ -186,13 +190,27 @@ this.pilotsStore = new Ext.data.Store({
 				{name: "pitch", type: 'string'},
 				{name: "roll", type: 'string'}
 	],
+	remoteSort: false,
 	sortInfo: {field: "callsign", direction: 'ASC'}
 });
 
 
 //************************************************
-//** Pilots Lookup SideBar Grid
+//** Pilots Grid in Lookup SideBar Grid
 //************************************************
+//** selection model for grid below
+this.checkSelectionModel = new Ext.grid.CheckboxSelectionModel({singleSelect:false});
+this.checkSelectionModel.on('rowselect', function(selmodel, idx, rec){
+	var callsign = rec.get('callsign');
+	self.markers[callsign].setIcon(self.altitude_image(callsign, true));
+	self.polyLines[callsign].setOptions({'strokeColor':  'red'});
+});
+this.checkSelectionModel.on('rowdeselect', function(selmodel, idx, rec){
+	var callsign = rec.get('callsign');
+	self.markers[callsign].setIcon(self.altitude_image(callsign, false));
+	self.polyLines[callsign].setOptions({'strokeColor':  'blue'});
+});
+
 this.pilotsLookupGrid = new Ext.grid.GridPanel({
 	title: 'Pilots',
 	iconCls: 'iconPilots',
@@ -207,11 +225,11 @@ this.pilotsLookupGrid = new Ext.grid.GridPanel({
 			}    
 	],
 	viewConfig: {emptyText: 'No pilots online', forceFit: true}, 
-	sm: new Ext.grid.RowSelectionModel({singleSelect:true}),
+	sm: this.checkSelectionModel,
 	store: this.pilotsStore,
 	loadMask: true,
 	//TODO sm: pilotsSelectionModel,
-	columns: [  //TODO pilotsSelectionModel,
+	columns: [  this.checkSelectionModel,
 				{header: 'CallSign',  dataIndex:'callsign', sortable: true, renderer: this.render_callsign},
 				{header: 'Aircraft',  dataIndex:'model', sortable: true, hidden: true},
 				{header: 'Alt', dataIndex:'alt', sortable: true, align: 'right',
@@ -382,6 +400,10 @@ this.create_socket = function (){
 			altitude_update = true;
 			self.epoch = curr_epoch;
 		}
+
+		var selectedRecord = self.pilotsLookupGrid.getSelectionModel().getSelected();
+		var selected_callsign = selectedRecord ? selectedRecord.get('callsign') : '';
+
 		//console.log(altitude_update, curr_epoch, self.epoch, (curr_epoch - self.epoch));
 		if(self.pilotsStore.getCount() > 0){
 			//for(var idx=0; idx <= pilotsStore.getCount(); idx++){
@@ -401,28 +423,16 @@ this.create_socket = function (){
 						rec.set('alt', pilot.alt);
 						rec.set('alt_trend', pilot.alt_trend);		
 
-						//** Update callsign overlay
-						self.markers[callsign].setIcon(self.altitude_image(pilot.alt_trend)); 
-	
 						//** Update Icon Marker
 						var latlng = new google.maps.LatLng(pilot.lat, pilot.lng);
-
 						self.markers[callsign].setPosition(latlng); 
+						//self.markers[callsign].setIcon(self.altitude_image(pilot.alt_trend, callsign == selected_callsign)); 		
+
+						//** Update callsign overlay
 						self.callsignOverlays[callsign].setPosition(latlng);
-					
-						//rec.set('alt', pilots[rec.id].alt);
-						//rec.set('heading', pilots[rec.id].heading);
-						//rec.set('pitch', pilots[rec.id].pitch);
-						//rec.set('roll', pilots[rec.id].roll);
-						/* if(self.markers[r.callsign].length == 10){
-							var marker = self.markers[r.callsign].pop();
-							marker.setMap(null);
-							
-						}
-						self.markers[r.callsign][0].setIcon(icons.yellow_blip);
-						*/
-						
-	
+
+						//** Update Polylines	
+						//self.polyLines[callsign].setOptions({'strokeColor': selected_callsign == callsign ? 'red' : 'blue'});
 						var path = self.polyLines[callsign].getPath();
 						if(path.getLength() == 50){
 							path.pop() //(9);
@@ -431,22 +441,37 @@ this.create_socket = function (){
 
 						delete pilots[callsign]
 					}else{
+						//## TODO delete dead items
 						var f = rec.get('flag');
-						if(f > 0){
-							rec.set('flag', -1);	
+						if(f < -10){
+							
+							var callsign = rec.get('callsign');
+							console.log('NUKED', callsign)
+							//* remove store
+							self.pilotsStore.removeAt( self.pilotsStore.indexOfId(callsign));
+							//* remove markers
+							self.markers[callsign].setMap(null);
+							delete self.markers[callsign]
+							//* remove poly lines
+							self.polyLines[callsign].setMap(null);
+							delete self.polyLines[callsign]
+							delete self.polyCoordinates[callsign]
+							
 						}else{
-							f = f -1;
-							rec.set('flag', f);	
+							if(f > 0){
+								rec.set('flag', -1);	
+							}else{
+								f = f -1;
+								rec.set('flag', f);	
+							}
 						}
-						//console.log("dead", );
-						
-						//
 					}
 				}else{
 					//console.log("errOR");
 				}
 			}, self);
 		}
+		//******** Create Pilots ********
 		//* add new pilots_list
 		for(var callsign in pilots){
 			
@@ -464,7 +489,7 @@ this.create_socket = function (){
 									position: latlng, 
 									map: self.Map,
 									title: callsign,
-									icon: self.icons.level_blue
+									icon: self.altitude_image(pilot.alt_trend, false)
 			});
 
 			//** Create callsign overlay

@@ -8,8 +8,6 @@ import simplejson as json
 from PyQt4 import QtCore
 from PyQt4 import QtNetwork
 
-#MAX_NAME_SERVER = 20
-#NS_INTERVAL = 300 # seconds
 
 import mp_config
 

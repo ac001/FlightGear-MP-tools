@@ -114,7 +114,7 @@ this.render_altitude = function (v, meta, rec, rowIdx, colIdx, store){
 	return "<span style='color:" + self.altitude_color(v) + ";'>" + Ext.util.Format.number(v, '0,000'); + '</span>';
 }
 this.render_altitude_trend = function (v, meta, rec, rowIdx, colIdx, store){
-	return "<img src='" + self.altitude_image(v) + "'>";
+	return "<img src='" + self.altitude_image(v, rec.get('check') == 1) + "'>";
 }
 this.altitude_image = function(alt_trend, is_selected){
 	var color = is_selected ? 'red' : 'blue';
@@ -162,6 +162,7 @@ this.pilotsDataCountLabel = new Ext.Toolbar.TextItem({text:'No pilots'});
 
 var PilotRecord = Ext.data.Record.create([
 	{name: 'flag', type: 'int'},
+	{name: 'check', type: 'int'},
 	{name: "callsign", type: 'string'},
 	{name: "server_ip", type: 'string'},
 	{name: "model", type: 'string'},
@@ -179,6 +180,7 @@ var PilotRecord = Ext.data.Record.create([
 this.pilotsStore = new Ext.data.Store({
 	idProperty: 'callsign',
 	fields: [ 	{name: 'flag', type: 'int'},
+				{name: 'check', type: 'int'},
 				{name: "callsign", type: 'string'},
 				{name: "server_ip", type: 'string'},
 				{name: "model", type: 'string'},
@@ -205,11 +207,13 @@ this.checkSelectionModel.on('rowselect', function(selmodel, idx, rec){
 	var callsign = rec.get('callsign');
 	self.markers[callsign].setIcon(self.altitude_image(callsign, true));
 	self.polyLines[callsign].setOptions({'strokeColor':  'red'});
+	rec.set('check', 1);
 });
 this.checkSelectionModel.on('rowdeselect', function(selmodel, idx, rec){
 	var callsign = rec.get('callsign');
 	self.markers[callsign].setIcon(self.altitude_image(callsign, false));
 	self.polyLines[callsign].setOptions({'strokeColor':  'blue'});
+	rec.set('check', 0);
 });
 
 this.pilotsLookupGrid = new Ext.grid.GridPanel({
@@ -485,6 +489,7 @@ this.create_socket = function (){
 			var pRec = new PilotRecord(pilot, callsign);
 			pRec.set('callsign', callsign);
 			pRec.set('flag', 0);
+			pRec.set('check', 0);
 			self.pilotsStore.add(pRec);
 
 			//** Create New Marker and callsign overlay

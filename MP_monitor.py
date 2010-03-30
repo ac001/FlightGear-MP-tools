@@ -13,6 +13,7 @@ from PyQt4 import QtNetwork
 import mp_config
 
 
+
 ###############################################
 ## Thread that looks up the DNS servers
 ###############################################
@@ -161,6 +162,8 @@ class MP_MonitorBot(QtCore.QObject):
 		#return
 		#print self.host2ip	
 		#return
+		if not self.host2ip.has_key("mpserver02.flightgear.org"):
+			return
 		host_address = self.host2ip["mpserver02.flightgear.org"]
 		#print "host_address=", host_address
 		#for ip in self.ip2host:
@@ -255,39 +258,45 @@ class MP_MonitorBot(QtCore.QObject):
 							pilot['alt_trend'] = alt_trend
 	
 							## Heading
-							if(1 == 1):
+							"""
+							if(1 == 0):
 								lat1 =  (pi/180) * prev_pilot['lat'] ## (pi/180) *
-								lon1 =  (pi/180) * prev_pilot['lng']
+								lon1 =  (pi/180) * (prev_pilot['lng'] * -1)
 								lat2 =  (pi/180) * lat
-								lon2 =  (pi/180) * lng
+								lon2 =  (pi/180) * (lng * -1)
 							else:
-								lat1 =  prev_pilot['lat'] ## (pi/180) *
-								lon1 =  prev_pilot['lng']
+
+								## with inout of
+								lat1 =  prev_pilot['lat'] 
+								lon1 =  prev_pilot['lng'] 
 								lat2 =  lat
-								lon2 =  lng
+								lon2 =  lng 
+							"""
 							
-							try:
-								dist = acos( sin(lat1) * sin(lat2) + cos(lat1) * cos(lat2) * cos(lon1-lon2))
-							except:
-								dist = 'D.err'
-								## ERROR when postions are the same
-								print "Distance Error", lat1, lat2, lon1, lon2
-							pilot['dist'] = dist
+							#try:
+							dist = None
+							hdg = self.heading(prev_pilot['lat'], lat, prev_pilot['lng'], lng)
+							pilot['hdg'] = hdg
+							#except:
+							#	dist = 'D.err'
+							#	## ERROR when postions are the same
+							#	print "Distance Error", callsign, lat1, lat2, lon1, lon2
+							#pilot['dist'] = dist
 							#d = 2 * asin( sqrt( pow( sin((lat1-lat2) / 2) ),2) +  cos(lat1) * cos(lat2) * pow( sin((lon1-lon2)/2) ),2)))
 							#print d
-							hdg = None
-							if dist:
-								try:
-									if sin(lon2-lon1) < 0:       
-										hdg = acos((sin(lat2)-sin(lat1)*cos(dist))/(sin(dist)*cos(lat1)))    
-									else:       
-										hdg = 2 * pi - acos((sin(lat2)-sin(lat1)*cos(dist))/(sin(dist)*cos(lat1)))    
-									#print d, tc1
-									pilot['hdg'] = hdg
-								except:
-									pilot['hdg'] = 'h.err'
-							else:
-								pilot['hdg'] = 'no dist'
+							#hdg = None
+							#if dist:
+							#	try:
+							#		if sin(lon2-lon1) < 0:       
+							#			hdg = acos((sin(lat2)-sin(lat1)*cos(dist))/(sin(dist)*cos(lat1)))    
+							#		else:       
+							#			hdg = 2 * pi - acos((sin(lat2)-sin(lat1)*cos(dist))/(sin(dist)*cos(lat1)))    
+							#		#print d, tc1
+							#		pilot['hdg'] = hdg
+							#	except:
+							#		pilot['hdg'] = 'h.err'
+							#else:
+							#	pilot['hdg'] = 'no dist'
 
 							#hdg = atan2(lat1-lat2, lon1-lon2)
 							#tc1=mod( 	atan2( sin(lon1-lon2)   * cos(lat2),
@@ -324,6 +333,26 @@ class MP_MonitorBot(QtCore.QObject):
 		self.increment += 1
 
 	#######################################################
+	## Calculations - thanks http://www.movable-type.co.uk/scripts/latlong.html
+	def calc_crow_distance(self, lat1, lng1, lat2, lng2):
+		R = 6371;
+		dLat = radians(lat2 - lat1)
+		dLng = radians(lng2 - lng1)	
+		a = sin(dLat/2) * sin(dLat/2) +  cos(radians(lat1)) * cos(radians(lat2)) * sin(dLng/2) * sin(dLng/2)
+		c = 2 * atan2(sqrt(a), sqrt(1-a))
+		return R * c
+
+	def heading(self, deglat1, deglng1, deglat2, deglng2):
+		lat1 = radians(deglat1) 
+		lat2 = radians(deglat2)
+		dLng = radians(deglng2 - deglng1)
+		y = sin(dLng) * cos(lat2);
+		x = cos(lat1) * sin(lat2) -	sin(lat1) * cos(lat2) * cos(dLng)
+		brng = atan2(y, x)
+		return round( (degrees(brng) + 360) % 360 )
+
+
+	#######################################################
 	## Events
 	def on_domain_found(self, host_name, ip_address):
 		host_name = str(host_name)
@@ -357,6 +386,7 @@ class MP_MonitorBot(QtCore.QObject):
 
 
 
+
 ##################
 ## Run code
 ##################
@@ -367,8 +397,15 @@ def main():
 	#monitorBot.run()
 	return app.exec_()
 
+
+
+
+
+
 if __name__ == '__main__':
 	main()
-	#print query_server("mpserver02.flightgear.org")
+
+	#print "distance", calc_crow_distance(37.613721, -122.357225, 37.6287, -122.3932)
+	#print "heading", heading(37.613721, -122.357225, 37.6287, -122.3932)
 
 

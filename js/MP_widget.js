@@ -48,6 +48,7 @@ function MP_Widget(){
 var self = this;
 
 this.epoch = new Date().getTime();
+this.precessing_request = false;
 
 this.webSocket = null;
 this.Map = null
@@ -389,6 +390,12 @@ this.create_socket = function (){
 			console.log("No pilots", json);
 			return;
 		}
+		if(self.processing_request){
+			console.log("STILL PROCESS");
+			return;
+		}
+		self.processing_request = true;
+
 		var pilots =  json['pilots'];
 		self.statusLabel.setText(pilots.length);
 		//var projection = self.myOverlay.getProjection();
@@ -538,6 +545,7 @@ this.create_socket = function (){
 		//#refreshTimerLabel.setText(refresh_counter)
 		//refresh_counter = REFRESH_RATE;
 		//setTimeout(load_pilots, 1000);
+		self.processing_request = false;
 	}
 }
 
